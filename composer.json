@@ -1,0 +1,8 @@
+{
+  "name": "scentology/course-project",
+  "description": "Scentology dynamic website starter using PHP and MySQL",
+  "type": "project",
+  "require": {
+    "php": ">=8.0"
+  }
+}
