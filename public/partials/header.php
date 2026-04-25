@@ -19,6 +19,8 @@ ensure_session_started();
         <a href="/index.php">Home</a>
         <a href="/shops.php">Shops</a>
         <?php if (is_logged_in()): ?>
+            <a href="/listings.php">Listings</a>
+            <a href="/trades.php">Trades</a>
             <a href="/profile.php">Profile</a>
             <a href="/logout.php">Logout</a>
         <?php else: ?>

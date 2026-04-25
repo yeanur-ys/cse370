@@ -16,6 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fullName = trim((string) ($_POST['full_name'] ?? ''));
     $email = trim((string) ($_POST['email'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
+    $role = trim((string) ($_POST['role'] ?? 'general'));
+    $isSeller = ($role === 'seller');
 
     if ($fullName === '' || $email === '' || $password === '') {
         $error = 'All fields are required.';
@@ -26,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (find_user_by_email($email) !== null) {
         $error = 'Email is already registered.';
     } else {
-        $userId = create_user($fullName, $email, $password);
+        $userId = create_user($fullName, $email, $password, $isSeller);
         login_user($userId);
         header('Location: /profile.php');
         exit;
@@ -43,7 +45,7 @@ require_once __DIR__ . '/partials/header.php';
     <?php endif; ?>
 
     <form method="POST" action="/signup.php">
-        <label for="full_name">Full Name</label>
+        <label for="full_name">User Name</label>
         <input type="text" id="full_name" name="full_name" required>
 
         <label for="email">Email</label>
@@ -51,6 +53,12 @@ require_once __DIR__ . '/partials/header.php';
 
         <label for="password">Password</label>
         <input type="password" id="password" name="password" required>
+
+        <label for="role">Account Type</label>
+        <select id="role" name="role" required style="margin-bottom: 14px;">
+            <option value="general">General User</option>
+            <option value="seller">Seller</option>
+        </select>
 
         <button type="submit">Create Account</button>
     </form>

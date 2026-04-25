@@ -16,11 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = trim((string) ($_POST['phone'] ?? ''));
     $city = trim((string) ($_POST['city'] ?? ''));
     $bio = trim((string) ($_POST['bio'] ?? ''));
+    $collection = trim((string) ($_POST['collection'] ?? ''));
 
     if ($fullName === '') {
         $error = 'Full name is required.';
     } else {
-        update_profile($userId, $fullName, $phone, $city, $bio);
+        update_profile($userId, $fullName, $phone, $city, $bio, $collection);
         $success = 'Profile updated successfully.';
     }
 }
@@ -40,14 +41,23 @@ require_once __DIR__ . '/partials/header.php';
         <div class="alert success"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
 
+    <div style="background: #eef2ff; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+        <strong>Account Type:</strong> 
+        <?php if (!empty($user['is_seller'])): ?>
+            Seller (Total Sales: <?= htmlspecialchars((string) ($user['total_sell'] ?? '0')) ?>)
+        <?php else: ?>
+            General User
+        <?php endif; ?>
+    </div>
+
     <form method="POST" action="/profile.php">
-        <label for="full_name">Full Name</label>
+        <label for="full_name">User Name</label>
         <input type="text" id="full_name" name="full_name" value="<?= htmlspecialchars((string) ($user['full_name'] ?? '')) ?>" required>
 
         <label>Email</label>
         <input type="email" value="<?= htmlspecialchars((string) ($user['email'] ?? '')) ?>" disabled>
 
-        <label for="phone">Phone</label>
+        <label for="phone">Number</label>
         <input type="text" id="phone" name="phone" value="<?= htmlspecialchars((string) ($user['phone'] ?? '')) ?>">
 
         <label for="city">City</label>
@@ -56,7 +66,14 @@ require_once __DIR__ . '/partials/header.php';
         <label for="bio">Bio</label>
         <textarea id="bio" name="bio" rows="4"><?= htmlspecialchars((string) ($user['bio'] ?? '')) ?></textarea>
 
-        <button type="submit">Save Profile</button>
+        <?php if (empty($user['is_seller'])): ?>
+            <label for="collection">My Collection Notes (General Users Only)</label>
+            <textarea id="collection" name="collection" rows="3" placeholder="What perfumes do you own?"><?= htmlspecialchars((string) ($user['collection'] ?? '')) ?></textarea>
+        <?php else: ?>
+            <input type="hidden" name="collection" value="<?= htmlspecialchars((string) ($user['collection'] ?? '')) ?>">
+        <?php endif; ?>
+
+        <button type="submit">Update Profile</button>
     </form>
 
     <small>Member since: <?= htmlspecialchars((string) ($user['created_at'] ?? 'N/A')) ?></small>

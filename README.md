@@ -1,28 +1,27 @@
 # Scentology (PHP + MySQL)
 
-Course project starter for a dynamic multi-page website using **only PHP and MySQL**.
+Course project for a dynamic multi-page website using **only PHP and MySQL**. The database is strictly modeled after the provided EER diagram.
 
-## Implemented now (Phase 1)
-- Login / Sign Up
-- Profile view + update
-- Shops browse + register
+## Implemented Features
+- **User Roles:** General Users and Sellers
+- **Authentication:** Login / Sign Up with automatic role assignment
+- **Profile Management:** 
+  - General Users can manage a "Collection" of perfumes.
+  - Sellers track their total sales.
+- **Shops:** Browse all shops. Only authenticated Sellers can register new shops.
+- **Listings:** Sellers can post item listings (Item Name, Price, Quantity, Condition).
+- **Trades:** General users and Sellers can post what they are offering vs. what they desire.
 
 ## Project Structure
 - `app/` core config, DB connection, auth helper
-- `public/` website pages and assets
-- `database/schema.sql` MySQL schema + demo seed
+- `public/` frontend UI pages (`shops.php`, `listings.php`, `trades.php`, etc)
+- `database/schema.sql` Complete MySQL schema aligning with EER definitions
 
 ## Setup
-1. Create database and tables:
-
-```sql
-SOURCE database/schema.sql;
-```
-
-Or run from terminal:
+1. Create database and tables the Windows way (XAMPP):
 
 ```powershell
-mysql -u root -p < database/schema.sql
+Get-Content database\schema.sql | C:\xampp\mysql\bin\mysql.exe -u root
 ```
 
 2. Update DB credentials in `app/config.php` if needed.
@@ -30,17 +29,12 @@ mysql -u root -p < database/schema.sql
 3. Start the app from project root:
 
 ```powershell
-php -S localhost:8000 -t public
+C:\xampp\php\php.exe -S localhost:8000 -t public
 ```
 
 4. Open:
 - `http://localhost:8000`
 
-## Demo Account
-- Email: `demo@scentology.com`
-- Password hash is seeded only for structure; easiest is to create a new account from Sign Up page.
-
-## Notes
-- Uses `password_hash()` and `password_verify()`.
-- `shops` supports city/filter and simple inventory notes.
-- Map integration can be added later in next phase.
+## Architecture Notes
+- The database uses table extension/inheritance `User` -> `Profile` -> `Seller`.
+- Uses strictly native SQL with PHP PDO to avoid abstraction libraries.

@@ -51,14 +51,14 @@ function logout_user(): void
 
 function find_user_by_email(string $email): ?array
 {
-    $stmt = db()->prepare('SELECT id, full_name, email, password_hash FROM users WHERE email = :email LIMIT 1');
+    $stmt = db()->prepare('SELECT User_ID as id, User_Name as full_name, Email as email, Password as password_hash FROM User WHERE Email = :email LIMIT 1');
     $stmt->execute(['email' => $email]);
     $user = $stmt->fetch();
 
     return $user ?: null;
 }
 
-function create_user(string $fullName, string $email, string $password): int
+function create_user(string $fullName, string $email, string $password, bool $isSeller = false): int
 {
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
@@ -66,7 +66,7 @@ function create_user(string $fullName, string $email, string $password): int
     $pdo->beginTransaction();
 
     try {
-        $stmt = $pdo->prepare('INSERT INTO users (full_name, email, password_hash) VALUES (:full_name, :email, :password_hash)');
+        $stmt = $pdo->prepare('INSERT INTO User (User_Name, Email, Password) VALUES (:full_name, :email, :password_hash)');
         $stmt->execute([
             'full_name' => $fullName,
             'email' => $email,
@@ -75,8 +75,13 @@ function create_user(string $fullName, string $email, string $password): int
 
         $userId = (int) $pdo->lastInsertId();
 
-        $profileStmt = $pdo->prepare('INSERT INTO profiles (user_id, phone, city, bio) VALUES (:user_id, "", "", "")');
+        $profileStmt = $pdo->prepare('INSERT INTO Profile (User_ID, Number, City, BIO) VALUES (:user_id, "", "", "")');
         $profileStmt->execute(['user_id' => $userId]);
+
+        if ($isSeller) {
+            $sellerStmt = $pdo->prepare('INSERT INTO Seller (User_ID, Total_Sell) VALUES (:user_id, 0)');
+            $sellerStmt->execute(['user_id' => $userId]);
+        }
 
         $pdo->commit();
 
@@ -90,10 +95,13 @@ function create_user(string $fullName, string $email, string $password): int
 function get_user_with_profile(int $userId): ?array
 {
     $stmt = db()->prepare(
-        'SELECT u.id, u.full_name, u.email, u.created_at, p.phone, p.city, p.bio
-         FROM users u
-         LEFT JOIN profiles p ON p.user_id = u.id
-         WHERE u.id = :user_id
+        'SELECT u.User_ID as id, u.User_Name as full_name, u.Email as email, u.Created_at as created_at, u.Collection as collection, 
+                p.Number as phone, p.City as city, p.BIO as bio, 
+                s.User_ID as is_seller, s.Total_Sell as total_sell
+         FROM User u
+         LEFT JOIN Profile p ON p.User_ID = u.User_ID
+         LEFT JOIN Seller s ON s.User_ID = u.User_ID
+         WHERE u.User_ID = :user_id
          LIMIT 1'
     );
 
@@ -103,20 +111,21 @@ function get_user_with_profile(int $userId): ?array
     return $result ?: null;
 }
 
-function update_profile(int $userId, string $fullName, string $phone, string $city, string $bio): void
+function update_profile(int $userId, string $fullName, string $phone, string $city, string $bio, string $collection = ''): void
 {
     $pdo = db();
     $pdo->beginTransaction();
 
     try {
-        $userStmt = $pdo->prepare('UPDATE users SET full_name = :full_name WHERE id = :id');
+        $userStmt = $pdo->prepare('UPDATE User SET User_Name = :full_name, Collection = :collection WHERE User_ID = :id');
         $userStmt->execute([
             'full_name' => $fullName,
+            'collection' => $collection,
             'id' => $userId,
         ]);
 
         $profileStmt = $pdo->prepare(
-            'UPDATE profiles SET phone = :phone, city = :city, bio = :bio WHERE user_id = :user_id'
+            'UPDATE Profile SET Number = :phone, City = :city, BIO = :bio WHERE User_ID = :user_id'
         );
         $profileStmt->execute([
             'phone' => $phone,
