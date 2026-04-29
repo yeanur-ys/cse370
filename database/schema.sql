@@ -62,7 +62,64 @@ CREATE TABLE IF NOT EXISTS Trade (
     Offering VARCHAR(255) NOT NULL,
     Desired VARCHAR(255) NOT NULL,
     Status VARCHAR(50) DEFAULT 'Pending',
+    Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_trade_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Brand (
+    Brand_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Brand_Name VARCHAR(150) NOT NULL UNIQUE,
+    No_of_Perfumes INT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS Perfume (
+    Perfume_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Brand_ID INT NOT NULL,
+    Name VARCHAR(200) NOT NULL,
+    Release_Year INT,
+    Note_ID INT,
+    CONSTRAINT fk_perfume_brand FOREIGN KEY (Brand_ID) REFERENCES Brand(Brand_ID) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Notes (
+    Note_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Note_Name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS Has_Notes (
+    Perfume_ID INT NOT NULL,
+    Note_ID INT NOT NULL,
+    PRIMARY KEY (Perfume_ID, Note_ID),
+    CONSTRAINT fk_has_notes_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_has_notes_notes FOREIGN KEY (Note_ID) REFERENCES Notes(Note_ID) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Available (
+    Perfume_ID INT NOT NULL,
+    Shop_ID INT NOT NULL,
+    PRIMARY KEY (Perfume_ID, Shop_ID),
+    CONSTRAINT fk_available_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_available_shop FOREIGN KEY (Shop_ID) REFERENCES Shop(Shop_ID) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Wishlist (
+    Perfume_ID INT NOT NULL,
+    User_ID INT NOT NULL,
+    PRIMARY KEY (Perfume_ID, User_ID),
+    CONSTRAINT fk_wishlist_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_wishlist_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Review (
+    Review_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Perfume_ID INT NOT NULL,
+    User_ID INT NOT NULL,
+    Rating INT CHECK (Rating >= 1 AND Rating <= 5),
+    Comment TEXT,
+    Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_review_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_review_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
+    UNIQUE KEY unique_review (Perfume_ID, User_ID)
 );
 
 INSERT INTO User (User_Name, Email, Password)

@@ -18,9 +18,13 @@ ensure_session_started();
     <nav class="nav">
         <a href="/index.php">Home</a>
         <a href="/shops.php">Shops</a>
+        <a href="/perfumes.php">Perfumes</a>
+        <a href="/brands.php">Brands</a>
         <?php if (is_logged_in()): ?>
             <a href="/listings.php">Listings</a>
             <a href="/trades.php">Trades</a>
+            <a href="/wishlist.php">Wishlist</a>
+            <a href="/reviews.php">Reviews</a>
             <a href="/profile.php">Profile</a>
             <a href="/logout.php">Logout</a>
         <?php else: ?>
