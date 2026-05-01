@@ -11,33 +11,39 @@ $brandFilter = trim((string) ($_GET['brand'] ?? ''));
 $noteFilter = trim((string) ($_GET['note'] ?? ''));
 
 // Fetch all perfumes with brands and notes
-$pdo = db();
+try {
+    $pdo = db();
 
-$query = "
-    SELECT p.Perfume_ID, p.Name, p.Release_Year, p.Price, p.Image_URL, b.Brand_Name, b.Brand_ID,
-           GROUP_CONCAT(n.Note_Name SEPARATOR ', ') as Notes
-    FROM Perfume p
-    JOIN Brand b ON p.Brand_ID = b.Brand_ID
-    LEFT JOIN Has_Notes hn ON p.Perfume_ID = hn.Perfume_ID
-    LEFT JOIN Notes n ON hn.Note_ID = n.Note_ID
-";
+    $query = "
+        SELECT p.Perfume_ID, p.Name, p.Release_Year, p.Price, p.Image_URL, b.Brand_Name, b.Brand_ID,
+               GROUP_CONCAT(n.Note_Name SEPARATOR ', ') as Notes
+        FROM Perfume p
+        JOIN Brand b ON p.Brand_ID = b.Brand_ID
+        LEFT JOIN Has_Notes hn ON p.Perfume_ID = hn.Perfume_ID
+        LEFT JOIN Notes n ON hn.Note_ID = n.Note_ID
+    ";
 
-$params = [];
-if ($brandFilter) {
-    $query .= " WHERE b.Brand_ID = ?";
-    $params[] = $brandFilter;
+    $params = [];
+    if ($brandFilter) {
+        $query .= " WHERE b.Brand_ID = ?";
+        $params[] = $brandFilter;
+    }
+
+    $query .= " GROUP BY p.Perfume_ID ORDER BY b.Brand_Name, p.Name";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+    $perfumes = $stmt->fetchAll();
+
+    // Fetch all brands for filter
+    $brandStmt = $pdo->prepare("SELECT Brand_ID, Brand_Name FROM Brand ORDER BY Brand_Name");
+    $brandStmt->execute();
+    $brands = $brandStmt->fetchAll();
+} catch (Exception $e) {
+    $perfumes = [];
+    $brands = [];
+    $dbError = "Database error: " . $e->getMessage() . ". <a href='init-db.php'>Initialize database</a>";
 }
-
-$query .= " GROUP BY p.Perfume_ID ORDER BY b.Brand_Name, p.Name";
-
-$stmt = $pdo->prepare($query);
-$stmt->execute($params);
-$perfumes = $stmt->fetchAll();
-
-// Fetch all brands for filter
-$brandStmt = $pdo->prepare("SELECT Brand_ID, Brand_Name FROM Brand ORDER BY Brand_Name");
-$brandStmt->execute();
-$brands = $brandStmt->fetchAll();
 
 // Fetch user's wishlist if logged in
 $userWishlist = [];
@@ -73,6 +79,12 @@ require_once __DIR__ . '/partials/header.php';
     <p>Browse our collection of premium perfumes.</p>
 </div>
 
+<?php if (isset($dbError)): ?>
+    <div class="alert alert-error" style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        <strong>⚠️ Database Error:</strong> <?= $dbError ?>
+    </div>
+<?php endif; ?>
+
 <div class="card">
     <h3>Filter by Brand</h3>
     <form method="GET" action="/perfumes.php">
@@ -97,11 +109,16 @@ require_once __DIR__ . '/partials/header.php';
         <div class="grid">
             <?php foreach ($perfumes as $perfume): ?>
                 <div class="shop-item">
-                    <?php if ($perfume['Image_URL']): ?>
-                        <div class="perfume-image" style="width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 10px;">
-                            <img src="<?= htmlspecialchars((string) $perfume['Image_URL']) ?>" alt="<?= htmlspecialchars((string) $perfume['Name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
-                        </div>
-                    <?php endif; ?>
+                    <div class="perfume-image" style="width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 10px; background: #e0e0e0; display: flex; align-items: center; justify-content: center;">
+                        <?php if ($perfume['Image_URL']): ?>
+                            <img src="<?= htmlspecialchars((string) $perfume['Image_URL']) ?>" 
+                                 alt="<?= htmlspecialchars((string) $perfume['Name']) ?>" 
+                                 style="width: 100%; height: 100%; object-fit: cover;"
+                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\"text-align: center; width: 100%;\">🧴 No image</div>'">
+                        <?php else: ?>
+                            <div style="text-align: center; width: 100%;">🧴 No image</div>
+                        <?php endif; ?>
+                    </div>
                     <strong>
                         <a href="/perfume-detail.php?id=<?= $perfume['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;">
                             <?= htmlspecialchars((string) $perfume['Name']) ?>

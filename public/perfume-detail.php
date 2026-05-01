@@ -101,11 +101,19 @@ require_once __DIR__ . '/partials/header.php';
     <div style="display: flex; gap: 30px; flex-wrap: wrap;">
         <!-- Image Section -->
         <div style="flex: 1; min-width: 300px;">
-            <?php if ($perfume['Image_URL']): ?>
-                <img src="<?= htmlspecialchars((string) $perfume['Image_URL']) ?>" 
-                     alt="<?= htmlspecialchars((string) $perfume['Name']) ?>"
-                     style="width: 100%; max-width: 400px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <?php endif; ?>
+            <div style="background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 400px;">
+                <?php if ($perfume['Image_URL']): ?>
+                    <img src="<?= htmlspecialchars((string) $perfume['Image_URL']) ?>" 
+                         alt="<?= htmlspecialchars((string) $perfume['Name']) ?>"
+                         style="width: 100%; max-width: 400px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                         onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\"text-align: center; padding: 40px;\"><div style=\"font-size: 48px;\">🧴</div><p>Image unavailable</p></div>'">
+                <?php else: ?>
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 48px;">🧴</div>
+                        <p>No image available</p>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
 
         <!-- Details Section -->

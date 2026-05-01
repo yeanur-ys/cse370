@@ -6,18 +6,22 @@ require_once __DIR__ . '/../app/config.php';
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
 
-$pdo = db();
-
-// Fetch featured perfumes (highest priced or random selection)
-$featuredStmt = $pdo->prepare("
-    SELECT p.Perfume_ID, p.Name, p.Price, p.Image_URL, b.Brand_Name
-    FROM Perfume p
-    JOIN Brand b ON p.Brand_ID = b.Brand_ID
-    ORDER BY p.Price DESC
-    LIMIT 6
-");
-$featuredStmt->execute();
-$featuredPerfumes = $featuredStmt->fetchAll();
+try {
+    $pdo = db();
+    
+    // Fetch featured perfumes (highest priced or random selection)
+    $featuredStmt = $pdo->prepare("
+        SELECT p.Perfume_ID, p.Name, p.Price, p.Image_URL, b.Brand_Name
+        FROM Perfume p
+        JOIN Brand b ON p.Brand_ID = b.Brand_ID
+        ORDER BY p.Price DESC
+        LIMIT 6
+    ");
+    $featuredStmt->execute();
+    $featuredPerfumes = $featuredStmt->fetchAll();
+} catch (Exception $e) {
+    $featuredPerfumes = [];
+}
 
 require_once __DIR__ . '/partials/header.php';
 ?>
