@@ -5,9 +5,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/config.php';
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
+require_once __DIR__ . '/../app/assets.php';
 
-$user = is_logged_in() ? get_user_with_profile($_SESSION['user_id']) : null;
-$brandFilter = trim((string) ($_GET['brand'] ?? ''));
+$userId = current_user_id();
+$user = $userId !== null ? get_user_with_profile($userId) : null;
+
+$brandFilter = isset($_GET['brand']) ? (int) $_GET['brand'] : 0;
 $noteFilter = trim((string) ($_GET['note'] ?? ''));
 
 // Fetch all perfumes with brands and notes
@@ -24,7 +27,7 @@ try {
     ";
 
     $params = [];
-    if ($brandFilter) {
+    if ($brandFilter > 0) {
         $query .= " WHERE b.Brand_ID = ?";
         $params[] = $brandFilter;
     }
@@ -47,25 +50,25 @@ try {
 
 // Fetch user's wishlist if logged in
 $userWishlist = [];
-if ($user) {
-    $wishlistStmt = $pdo->prepare("SELECT Perfume_ID FROM Wishlist WHERE User_ID = ?");
-    $wishlistStmt->execute([$user['id']]);
-    $userWishlist = array_column($wishlistStmt->fetchAll(), 'Perfume_ID');
+if ($user && isset($pdo)) {
+    $wishlistStmt = $pdo->prepare('SELECT Perfume_ID FROM Wishlist WHERE User_ID = ?');
+    $wishlistStmt->execute([(int) $user['id']]);
+    $userWishlist = array_map('intval', array_column($wishlistStmt->fetchAll(), 'Perfume_ID'));
 }
 
 // Handle add/remove from wishlist
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in() && $user && isset($pdo)) {
     $perfumeId = (int) ($_POST['perfume_id'] ?? 0);
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add_wishlist' && $perfumeId > 0) {
-        $addStmt = $pdo->prepare("INSERT IGNORE INTO Wishlist (Perfume_ID, User_ID) VALUES (?, ?)");
-        $addStmt->execute([$perfumeId, $user['id']]);
+        $addStmt = $pdo->prepare('INSERT IGNORE INTO Wishlist (Perfume_ID, User_ID) VALUES (?, ?)');
+        $addStmt->execute([$perfumeId, (int) $user['id']]);
         header("Location: perfumes.php");
         exit;
     } elseif ($action === 'remove_wishlist' && $perfumeId > 0) {
-        $removeStmt = $pdo->prepare("DELETE FROM Wishlist WHERE Perfume_ID = ? AND User_ID = ?");
-        $removeStmt->execute([$perfumeId, $user['id']]);
+        $removeStmt = $pdo->prepare('DELETE FROM Wishlist WHERE Perfume_ID = ? AND User_ID = ?');
+        $removeStmt->execute([$perfumeId, (int) $user['id']]);
         header("Location: perfumes.php");
         exit;
     }
@@ -109,13 +112,13 @@ require_once __DIR__ . '/partials/header.php';
         <div class="grid">
             <?php foreach ($perfumes as $perfume): ?>
                 <div class="shop-item">
-                    <div class="perfume-image" style="width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 10px; background: #e0e0e0; display: flex; align-items: center; justify-content: center;">
+                    <div class="perfume-image" style="width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 10px; background: #e0e0e0; display: flex; align-items: center; justify-content: center; position: relative;">
                         <?php if ($perfume['Image_URL']): ?>
-                            <img src="<?= htmlspecialchars((string) $perfume['Image_URL']) ?>" 
+                            <?php $imgUrl = asset_image_url((string) $perfume['Image_URL']); ?>
+                            <img src="<?= $imgUrl ?>" 
                                  alt="<?= htmlspecialchars((string) $perfume['Name']) ?>" 
                                  style="width: 100%; height: 100%; object-fit: cover;"
-                                 onerror="this.style.display='none';">
-                            <div class="no-image" style="text-align: center; width: 100%;">🧴 No image</div>
+                                 onerror="this.parentElement.innerHTML='<div style=\"text-align: center; width: 100%;\">🧴 No image</div>';">
                         <?php else: ?>
                             <div style="text-align: center; width: 100%;">🧴 No image</div>
                         <?php endif; ?>

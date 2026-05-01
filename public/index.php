@@ -33,7 +33,7 @@ try {
             (SELECT COUNT(*) FROM Review) as reviewCount
     ");
     $statsStmt->execute();
-    $stats = $statsStmt->fetch();
+    $stats = $statsStmt->fetch() ?: ['perfumeCount' => 0, 'brandCount' => 0, 'userCount' => 0, 'reviewCount' => 0];
 } catch (Exception $e) {
     $featuredPerfumes = [];
     $stats = ['perfumeCount' => 0, 'brandCount' => 0, 'userCount' => 0, 'reviewCount' => 0];

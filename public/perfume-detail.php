@@ -5,8 +5,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/config.php';
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
+require_once __DIR__ . '/../app/assets.php';
 
-$user = is_logged_in() ? get_user_with_profile($_SESSION['user_id']) : null;
+$userId = current_user_id();
+$user = $userId !== null ? get_user_with_profile($userId) : null;
 $perfumeId = (int) ($_GET['id'] ?? 0);
 
 if ($perfumeId <= 0) {
@@ -35,6 +37,12 @@ if (!$perfume) {
     header("Location: perfumes.php");
     exit;
 }
+
+// Add stats and notes formatting safely
+$perfume['Notes'] = $perfume['Notes'] ?? '';
+$perfume['Price'] = (float) ($perfume['Price'] ?? 0);
+$perfume['Name'] = (string) ($perfume['Name'] ?? 'Unknown Perfume');
+
 
 // Fetch reviews
 $reviewStmt = $pdo->prepare("
@@ -103,7 +111,8 @@ require_once __DIR__ . '/partials/header.php';
         <div style="flex: 1; min-width: 300px;">
             <div style="background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 400px;">
                 <?php if ($perfume['Image_URL']): ?>
-                    <img src="<?= htmlspecialchars((string) $perfume['Image_URL']) ?>" 
+                    <?php $imgUrl = asset_image_url((string) $perfume['Image_URL']); ?>
+                    <img src="<?= $imgUrl ?>" 
                          alt="<?= htmlspecialchars((string) $perfume['Name']) ?>"
                          style="width: 100%; max-width: 400px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
                          onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\"text-align: center; padding: 40px;\"><div style=\"font-size: 48px;\">🧴</div><p>Image unavailable</p></div>'">

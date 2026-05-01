@@ -91,6 +91,8 @@ CREATE TABLE IF NOT EXISTS Listing (
     Price DECIMAL(10,2) NOT NULL,
     Item_Condition VARCHAR(100) DEFAULT 'New',
     Status VARCHAR(50) DEFAULT 'Available',
+    Purchased_By_User_ID INT NULL,
+    Purchased_At TIMESTAMP NULL,
     CONSTRAINT fk_listing_seller FOREIGN KEY (User_ID) REFERENCES Seller(User_ID) ON DELETE CASCADE,
     CONSTRAINT fk_listing_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE
 );
@@ -107,6 +109,8 @@ CREATE TABLE IF NOT EXISTS Trade (
     Desired_Note_ID INT NOT NULL,
     Status VARCHAR(50) DEFAULT 'Pending',
     Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Accepted_By_User_ID INT NULL,
+    Accepted_At TIMESTAMP NULL,
     CONSTRAINT fk_trade_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
     CONSTRAINT fk_trade_offering FOREIGN KEY (Offering_Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE,
     CONSTRAINT fk_trade_desired FOREIGN KEY (Desired_Note_ID) REFERENCES Notes(Note_ID) ON DELETE CASCADE

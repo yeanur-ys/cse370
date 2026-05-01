@@ -8,7 +8,8 @@ require_once __DIR__ . '/../app/db.php';
 
 $success = '';
 $error = '';
-$user = is_logged_in() ? get_user_with_profile($_SESSION['user_id']) : null;
+$userId = current_user_id();
+$user = $userId !== null ? get_user_with_profile($userId) : null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_logged_in()) {

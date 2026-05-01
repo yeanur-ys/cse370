@@ -6,7 +6,8 @@ require_once __DIR__ . '/../app/config.php';
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
 
-$user = is_logged_in() ? get_user_with_profile($_SESSION['user_id']) : null;
+$userId = current_user_id();
+$user = $userId !== null ? get_user_with_profile($userId) : null;
 $pdo = db();
 
 // Fetch all reviews with ratings

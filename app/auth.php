@@ -95,7 +95,7 @@ function create_user(string $fullName, string $email, string $password, bool $is
 function get_user_with_profile(int $userId): ?array
 {
     $stmt = db()->prepare(
-        'SELECT u.User_ID as id, u.User_Name as full_name, u.Email as email, u.Created_at as created_at, u.Collection as collection, 
+        'SELECT u.User_ID as id, u.User_Name as full_name, u.Email as email, u.Created_at as created_at,
                 p.Number as phone, p.City as city, p.BIO as bio, 
                 s.User_ID as is_seller, s.Total_Sell as total_sell
          FROM User u
@@ -117,10 +117,9 @@ function update_profile(int $userId, string $fullName, string $phone, string $ci
     $pdo->beginTransaction();
 
     try {
-        $userStmt = $pdo->prepare('UPDATE User SET User_Name = :full_name, Collection = :collection WHERE User_ID = :id');
+        $userStmt = $pdo->prepare('UPDATE User SET User_Name = :full_name WHERE User_ID = :id');
         $userStmt->execute([
             'full_name' => $fullName,
-            'collection' => $collection,
             'id' => $userId,
         ]);
 

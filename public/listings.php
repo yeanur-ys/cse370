@@ -7,46 +7,77 @@ require_once __DIR__ . '/../app/db.php';
 
 $success = '';
 $error = '';
-$user = is_logged_in() ? get_user_with_profile($_SESSION['user_id']) : null;
+$userId = current_user_id();
+$user = $userId !== null ? get_user_with_profile($userId) : null;
 
-// Handle form submission for new listing (Sellers only)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_listing') {
-    if (!is_logged_in()) {
-        $error = 'Login required to post a listing.';
-    } elseif (!$user || !$user['is_seller']) {
-        $error = 'Only sellers can post listings.';
-    } else {
-        $itemName = trim((string) ($_POST['item_name'] ?? ''));
-        $quantity = (int) ($_POST['quantity'] ?? 1);
-        $price = (float) ($_POST['price'] ?? 0.0);
-        $condition = trim((string) ($_POST['item_condition'] ?? 'New'));
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'add_listing') {
+        if (!is_logged_in()) {
+            $error = 'Login required to post a listing.';
+        } elseif (!$user || !$user['is_seller']) {
+            $error = 'Only sellers can post listings.';
+        } else {
+            $itemName = trim((string) ($_POST['item_name'] ?? ''));
+            $quantity = (int) ($_POST['quantity'] ?? 1);
+            $price = (float) ($_POST['price'] ?? 0.0);
+            $condition = trim((string) ($_POST['item_condition'] ?? 'New'));
 
-        if ($itemName && $price >= 0 && $quantity > 0) {
-            $pdo = db();
-            $stmt = $pdo->prepare("INSERT INTO Listing (User_ID, Item_Name, Quantity, Price, Item_Condition) VALUES (?, ?, ?, ?, ?)");
-            if ($stmt->execute([$user['id'], $itemName, $quantity, $price, $condition])) {
-                $success = 'Listing successfully created.';
+            if ($itemName && $price >= 0 && $quantity > 0) {
+                try {
+                    $pdo = db();
+                    $stmt = $pdo->prepare("INSERT INTO Listing (User_ID, Item_Name, Quantity, Price, Item_Condition) VALUES (?, ?, ?, ?, ?)");
+                    if ($stmt->execute([(int) $user['id'], $itemName, $quantity, $price, $condition])) {
+                        $success = 'Listing successfully created.';
+                    } else {
+                        $error = 'Failed to create the listing.';
+                    }
+                } catch (Exception $e) {
+                    $error = 'Database error: ' . htmlspecialchars($e->getMessage());
+                }
             } else {
-                $error = 'Failed to create the listing.';
+                $error = 'Invalid listing details. Please check name, price, and quantity.';
+            }
+        }
+    } elseif ($_POST['action'] === 'purchase_listing') {
+        $listingId = (int) ($_POST['listing_id'] ?? 0);
+        if ($listingId > 0 && is_logged_in() && $user) {
+            try {
+                $pdo = db();
+                $stmt = $pdo->prepare("UPDATE Listing SET Status = 'Sold', Purchased_By_User_ID = ?, Purchased_At = NOW() WHERE Listing_ID = ?");
+                if ($stmt->execute([(int) $user['id'], $listingId])) {
+                    $success = 'Purchase successful! The seller has been notified.';
+                } else {
+                    $error = 'Failed to purchase listing.';
+                }
+            } catch (Exception $e) {
+                $error = 'Database error: ' . htmlspecialchars($e->getMessage());
             }
         } else {
-            $error = 'Invalid listing details. Please check name, price, and quantity.';
+            $error = 'Unable to purchase listing. Please ensure you are logged in.';
         }
     }
 }
 
 // Fetch all listings
-$pdo = db();
-$stmt = $pdo->prepare("
-    SELECT l.*, s.Shop_Name, u.User_Name, u.Email, p.City, p.Number
-    FROM Listing l
-    JOIN User u ON l.User_ID = u.User_ID 
-    LEFT JOIN Shop s ON s.User_ID = l.User_ID
-    LEFT JOIN Profile p ON u.User_ID = p.User_ID
-    ORDER BY l.Listing_ID DESC
-");
-$stmt->execute();
-$listings = $stmt->fetchAll();
+try {
+    $pdo = db();
+    $stmt = $pdo->prepare("
+        SELECT l.*, s.Shop_Name, u.User_Name, u.Email, p.City, p.Number
+        FROM Listing l
+        JOIN User u ON l.User_ID = u.User_ID 
+        LEFT JOIN Shop s ON s.User_ID = l.User_ID
+        LEFT JOIN Profile p ON u.User_ID = p.User_ID
+        ORDER BY l.Listing_ID DESC
+    ");
+    $stmt->execute();
+    $listings = $stmt->fetchAll();
+} catch (Exception $e) {
+    $listings = [];
+    if (!$error) {
+        $error = 'Failed to load listings: ' . htmlspecialchars($e->getMessage());
+    }
+}
 
 require_once __DIR__ . '/partials/header.php';
 ?>
@@ -123,8 +154,20 @@ require_once __DIR__ . '/partials/header.php';
                                 <small><strong>📱</strong> <?= htmlspecialchars((string) $listing['Number']) ?></small><br>
                             <?php endif; ?>
                             <?php if ($listing['Email']): ?>
-                                <small><strong>📧</strong> <a href="mailto:<?= htmlspecialchars((string) $listing['Email']) ?>" style="color: #2563eb;"><?= htmlspecialchars((string) $listing['Email']) ?></a></small>
+                                <small><strong>📧</strong> <a href="mailto:<?= htmlspecialchars((string) $listing['Email']) ?>" style="color: #10b981;"><?= htmlspecialchars((string) $listing['Email']) ?></a></small>
                             <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if (is_logged_in() && ($listing['Status'] ?? 'Available') === 'Available' && (int) $listing['User_ID'] !== $userId): ?>
+                        <form method="POST" action="listings.php" style="margin-top: 12px;">
+                            <input type="hidden" name="action" value="purchase_listing">
+                            <input type="hidden" name="listing_id" value="<?= $listing['Listing_ID'] ?>">
+                            <button type="submit" style="background: #2563eb; width: 100%; padding: 10px;">🛒 Purchase</button>
+                        </form>
+                    <?php elseif (($listing['Status'] ?? 'Available') !== 'Available'): ?>
+                        <div style="margin-top: 12px; padding: 10px; background: #e0e7ff; border-radius: 6px; text-align: center; color: #4338ca; font-weight: bold;">
+                            ✓ <?= htmlspecialchars((string) ($listing['Status'] ?? '')) ?>
                         </div>
                     <?php endif; ?>
                 </div>

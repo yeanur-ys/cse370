@@ -2,17 +2,14 @@
 
 ## Your server is running on: **http://localhost:8000**
 
-### ⚡ Quick Setup (3 Steps)
+### ⚡ Quick Setup (2 Steps)
 
 1. **Initialize Database**
    - Open: http://localhost:8000/init-db.php
    - This will create all tables and insert perfume data
+   - Wait for "Database initialized successfully!" message
 
-2. **Check System Status**
-   - Open: http://localhost:8000/check.php
-   - Verify all components are working
-
-3. **View Your Website**
+2. **View Your Website**
    - Homepage: http://localhost:8000/
    - Perfumes: http://localhost:8000/perfumes.php
    - Brands: http://localhost:8000/brands.php
@@ -38,26 +35,19 @@
 
 ### Admin/Setup Pages
 - **Database Setup** - http://localhost:8000/init-db.php
-- **System Check** - http://localhost:8000/check.php
 
 ---
 
 ## 🔧 Troubleshooting
 
-### If perfumes don't show:
+### If you get database errors:
 1. Go to http://localhost:8000/init-db.php to initialize database
 2. Wait for "Database initialized successfully!" message
 3. Then view http://localhost:8000/perfumes.php
 
-### If you get database errors:
-1. Make sure MySQL is running (check taskbar for mysqld.exe)
-2. Check app/config.php for correct database credentials
-3. Go to http://localhost:8000/check.php for diagnostics
-
-### If images don't load:
-- Images are loaded from GitHub raw URLs
-- Make sure you have internet connection
-- Fallback "🧴 No image" text will display if images can't load
+### If MySQL isn't running:
+1. Make sure MySQL is running (check XAMPP Control Panel for mysqld)
+2. Check app/config.php for correct database credentials (default: root/empty password)
 
 ---
 

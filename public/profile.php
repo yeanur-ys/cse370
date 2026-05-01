@@ -5,10 +5,16 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/config.php';
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
+require_once __DIR__ . '/../app/assets.php';
 
 require_login();
 
-$userId = (int) current_user_id();
+$userId = current_user_id();
+if ($userId === null) {
+    // Extra defense: should already be handled by require_login()
+    header('Location: login.php');
+    exit;
+}
 $success = '';
 $error = '';
 
@@ -27,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$user = get_user_with_profile($userId);
+$user = get_user_with_profile((int) $userId);
 
 require_once __DIR__ . '/partials/header.php';
 ?>
@@ -76,8 +82,6 @@ require_once __DIR__ . '/partials/header.php';
             <label for="bio">Bio</label>
             <textarea id="bio" name="bio" rows="4"><?= htmlspecialchars((string) ($user['bio'] ?? '')) ?></textarea>
 
-            <input type="hidden" name="collection" value="<?= htmlspecialchars((string) ($user['collection'] ?? '')) ?>">
-
             <button type="submit">Update Profile</button>
         </form>
 
@@ -87,18 +91,11 @@ require_once __DIR__ . '/partials/header.php';
     <!-- Collection Tab -->
     <div id="collection" class="tab-content">
         <?php if (empty($user['is_seller'])): ?>
-            <p><strong>📖 My Fragrance Collection:</strong></p>
-            <form method="POST" action="profile.php">
-                <label for="collection">My Collection Notes</label>
-                <textarea id="collection" name="collection" rows="6" placeholder="What perfumes do you own? List them here along with any notes..."><?= htmlspecialchars((string) ($user['collection'] ?? '')) ?></textarea>
-                
-                <input type="hidden" name="full_name" value="<?= htmlspecialchars((string) ($user['full_name'] ?? '')) ?>">
-                <input type="hidden" name="phone" value="<?= htmlspecialchars((string) ($user['phone'] ?? '')) ?>">
-                <input type="hidden" name="city" value="<?= htmlspecialchars((string) ($user['city'] ?? '')) ?>">
-                <input type="hidden" name="bio" value="<?= htmlspecialchars((string) ($user['bio'] ?? '')) ?>">
-                
-                <button type="submit">Save Collection</button>
-            </form>
+            <div style="background: #f0f0f0; padding: 12px; border-radius: 8px;">
+                <p><strong>📖 My Fragrance Collection:</strong></p>
+                <p><em>View your <a href="wishlist.php" style="color: #2563eb; font-weight: bold;">wishlist</a> to see perfumes you love.</em></p>
+                <p>You can manage your collection through your wishlist and the reviews you post about perfumes you own.</p>
+            </div>
         <?php else: ?>
             <div style="background: #fee2e2; padding: 12px; border-radius: 8px;">
                 <p>💼 Sellers don't have personal collections. Focus on managing your <a href="listings.php" style="color: #2563eb; font-weight: bold;">market listings</a> instead!</p>
@@ -129,7 +126,7 @@ require_once __DIR__ . '/partials/header.php';
                     <div class="shop-item">
                         <?php if ($item['Image_URL']): ?>
                             <div style="width: 100%; height: 150px; overflow: hidden; border-radius: 8px; margin-bottom: 10px;">
-                                <img src="<?= htmlspecialchars((string) $item['Image_URL']) ?>" alt="<?= htmlspecialchars((string) $item['Name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                <img src="<?= htmlspecialchars(asset_image_url((string) $item['Image_URL'])) ?>" alt="<?= htmlspecialchars((string) $item['Name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
                         <?php endif; ?>
                         <strong><a href="perfume-detail.php?id=<?= $item['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;"><?= htmlspecialchars((string) $item['Name']) ?></a></strong><br>
