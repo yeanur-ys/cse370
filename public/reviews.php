@@ -11,15 +11,14 @@ $pdo = db();
 
 // Fetch all reviews with ratings
 $stmt = $pdo->prepare("
-    SELECT r.Review_ID, r.Rating, r.Comment, r.Created_at, 
+    SELECT r.Review_ID, r.Rating, r.Comment, r.Created_at,
            p.Perfume_ID, p.Name, b.Brand_Name, u.User_Name,
-           AVG(r2.Rating) as Avg_Rating, COUNT(r2.Review_ID) as Review_Count
+           (SELECT AVG(Rating) FROM Review WHERE Perfume_ID = p.Perfume_ID) as Avg_Rating,
+           (SELECT COUNT(*) FROM Review WHERE Perfume_ID = p.Perfume_ID) as Review_Count
     FROM Review r
     JOIN Perfume p ON r.Perfume_ID = p.Perfume_ID
     JOIN Brand b ON p.Brand_ID = b.Brand_ID
     JOIN User u ON r.User_ID = u.User_ID
-    LEFT JOIN Review r2 ON p.Perfume_ID = r2.Perfume_ID
-    GROUP BY r.Review_ID, p.Perfume_ID
     ORDER BY r.Created_at DESC
     LIMIT 50
 ");

@@ -102,32 +102,32 @@ INSERT INTO Notes (Note_Name) VALUES
 ('Cedar')
 ON DUPLICATE KEY UPDATE Note_Name = Note_Name;
 
--- Insert Perfumes with Prices and Image URLs
-INSERT INTO Perfume (Brand_ID, Name, Price, Image_URL) VALUES
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Goldfield & Banks'), 'Pacific Rock Moss', 24000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Pacific%20Rock%20Moss.jpg'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Initio'), 'Side Effect', 38000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Side%20Effect.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Giorgio Armani'), 'Stronger With You Intensely', 13000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Stronger%20With%20You.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Yves Saint Laurent'), 'YSL Y', 14000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/YSL%20Y.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Creed'), 'Aventus', 42000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Creed%20Aventus.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Essential Parfums'), 'Bois Imperial', 12000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Bois%20Imperial.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Parfums de Marley'), 'Layton', 36000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Layton.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Maison Francis Kurkdjian'), 'Grand Soir', 40000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Grand%20Soir.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Dior'), 'Dior Homme', 16000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Dior%20Homme.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Hermes'), 'Terre d''Hermes', 15000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Terre%20d_Hermes.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Tom Ford'), 'Neroli Portofino', 40000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Neroli%20Portofino.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Tom Ford'), 'Soleil Blanc', 42000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Soleil%20Blanc.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Tom Ford'), 'Cherry Smoke', 55000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Cherry%20Smoke.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Giorgio Armani'), 'Acqua di Gio Profumo', 16000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Acqua%20di%20Gio%20Profumo.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Giorgio Armani'), 'Armani Code', 13000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Armani%20Code.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Guerlan'), 'Herbes Troublantes', 38000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Herbes%20Troublantes.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Amouage'), 'Outlands', 51000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Outlands.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Guerlan'), 'Tonka Sarrapia', 42000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Tonka%20Sarrapia.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Dior'), 'Allure Homme Sport', 13000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Allure%20Homme%20Sport.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Louis Vuitton'), 'Imagination', 38000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Imagination.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Louis Vuitton'), 'Meteore', 40000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Meteore.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Louis Vuitton'), 'Symphony', 60000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Symphony.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Louis Vuitton'), 'Le Sables Roses', 50000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Le%20Sables%20Roses.webp'),
-((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Dolce & Gabbana'), 'The One', 11000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/The%20One.webp');
+-- Insert Perfumes with Prices, Release Years, and Image URLs
+INSERT INTO Perfume (Brand_ID, Name, Release_Year, Price, Image_URL) VALUES
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Goldfield & Banks'), 'Pacific Rock Moss', 2015, 24000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Pacific%20Rock%20Moss.jpg'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Initio'), 'Side Effect', 2019, 38000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Side%20Effect.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Giorgio Armani'), 'Stronger With You Intensely', 2018, 13000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Stronger%20With%20You.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Yves Saint Laurent'), 'YSL Y', 2017, 14000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/YSL%20Y.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Creed'), 'Aventus', 2010, 42000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Creed%20Aventus.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Essential Parfums'), 'Bois Imperial', 2016, 12000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Bois%20Imperial.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Parfums de Marley'), 'Layton', 2016, 36000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Layton.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Maison Francis Kurkdjian'), 'Grand Soir', 2016, 40000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Grand%20Soir.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Dior'), 'Dior Homme', 2005, 16000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Dior%20Homme.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Hermes'), 'Terre d''Hermes', 2006, 15000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Terre%20d_Hermes.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Tom Ford'), 'Neroli Portofino', 2011, 40000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Neroli%20Portofino.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Tom Ford'), 'Soleil Blanc', 2015, 42000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Soleil%20Blanc.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Tom Ford'), 'Cherry Smoke', 2019, 55000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Cherry%20Smoke.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Giorgio Armani'), 'Acqua di Gio Profumo', 2015, 16000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Acqua%20di%20Gio%20Profumo.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Giorgio Armani'), 'Armani Code', 2004, 13000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Armani%20Code.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Guerlan'), 'Herbes Troublantes', 2013, 38000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Herbes%20Troublantes.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Amouage'), 'Outlands', 2018, 51000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Outlands.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Guerlan'), 'Tonka Sarrapia', 2014, 42000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Tonka%20Sarrapia.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Dior'), 'Allure Homme Sport', 2007, 13000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Allure%20Homme%20Sport.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Louis Vuitton'), 'Imagination', 2015, 38000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Imagination.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Louis Vuitton'), 'Meteore', 2016, 40000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Meteore.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Louis Vuitton'), 'Symphony', 2018, 60000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Symphony.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Louis Vuitton'), 'Le Sables Roses', 2018, 50000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/Le%20Sables%20Roses.webp'),
+((SELECT Brand_ID FROM Brand WHERE Brand_Name = 'Dolce & Gabbana'), 'The One', 2003, 11000, 'https://raw.githubusercontent.com/yeanur-ys/cse370/refs/heads/main/public/assets/images/The%20One.webp');
 
 -- Link Perfumes to their Notes
 INSERT INTO Has_Notes (Perfume_ID, Note_ID) 

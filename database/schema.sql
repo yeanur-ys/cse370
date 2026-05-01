@@ -1,15 +1,26 @@
 CREATE DATABASE IF NOT EXISTS scentology;
 USE scentology;
 
+-- Disable foreign key checks during schema reset
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Drop all tables in correct order (reverse of creation, respecting foreign keys)
 DROP TABLE IF EXISTS Trade;
+DROP TABLE IF EXISTS Review;
+DROP TABLE IF EXISTS Wishlist;
+DROP TABLE IF EXISTS Available;
+DROP TABLE IF EXISTS Has_Notes;
 DROP TABLE IF EXISTS Listing;
-DROP TABLE IF EXISTS shops;
-DROP TABLE IF EXISTS profiles;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS Seller;
 DROP TABLE IF EXISTS Shop;
+DROP TABLE IF EXISTS Seller;
 DROP TABLE IF EXISTS Profile;
 DROP TABLE IF EXISTS User;
+DROP TABLE IF EXISTS Perfume;
+DROP TABLE IF EXISTS Notes;
+DROP TABLE IF EXISTS Brand;
+
+-- Re-enable foreign key checks
+SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE IF NOT EXISTS User (
     User_ID INT AUTO_INCREMENT PRIMARY KEY,
