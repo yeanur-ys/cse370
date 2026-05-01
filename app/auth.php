@@ -26,7 +26,7 @@ function current_user_id(): ?int
 function require_login(): void
 {
     if (!is_logged_in()) {
-        header('Location: /login.php');
+        header('Location: login.php');
         exit;
     }
 }

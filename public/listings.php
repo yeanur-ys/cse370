@@ -38,10 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Fetch all listings
 $pdo = db();
 $stmt = $pdo->prepare("
-    SELECT l.*, s.Shop_Name, u.User_Name 
+    SELECT l.*, s.Shop_Name, u.User_Name, u.Email, p.City, p.Number
     FROM Listing l
     JOIN User u ON l.User_ID = u.User_ID 
     LEFT JOIN Shop s ON s.User_ID = l.User_ID
+    LEFT JOIN Profile p ON u.User_ID = p.User_ID
+    ORDER BY l.Listing_ID DESC
 ");
 $stmt->execute();
 $listings = $stmt->fetchAll();
@@ -65,7 +67,7 @@ require_once __DIR__ . '/partials/header.php';
 <?php if ($user && $user['is_seller']): ?>
 <div class="card">
     <h3>Post New Listing</h3>
-    <form method="POST" action="/listings.php">
+    <form method="POST" action="listings.php">
         <input type="hidden" name="action" value="add_listing">
         
         <label for="item_name">Item Name</label>
@@ -97,11 +99,34 @@ require_once __DIR__ . '/partials/header.php';
         <div class="grid">
             <?php foreach ($listings as $listing): ?>
                 <div class="shop-item">
-                    <strong><?= htmlspecialchars((string) $listing['Item_Name']) ?></strong>
-                    <span class="badge"><?= htmlspecialchars((string) $listing['Status']) ?></span><br>
-                    <small>Price: $<?= htmlspecialchars((string) $listing['Price']) ?></small><br>
-                    <small>Qty: <?= htmlspecialchars((string) $listing['Quantity']) ?> | Condition: <?= htmlspecialchars((string) $listing['Item_Condition']) ?></small><br>
-                    <small>Seller: <?= htmlspecialchars((string) $listing['User_Name']) ?> <?= $listing['Shop_Name'] ? '(' . htmlspecialchars((string) $listing['Shop_Name']) . ')' : '' ?></small>
+                    <strong style="color: #2563eb;">🏷️ <?= htmlspecialchars((string) $listing['Item_Name']) ?></strong>
+                    <span style="display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; margin: 8px 0;">
+                        <?= htmlspecialchars((string) $listing['Status']) ?>
+                    </span>
+                    <div style="margin: 12px 0; padding: 12px; background: #f3f4f6; border-radius: 6px;">
+                        <small><strong>💰 Price:</strong> ৳<?= number_format((float) $listing['Price']) ?></small><br>
+                        <small><strong>📦 Qty:</strong> <?= (int) $listing['Quantity'] ?></small><br>
+                        <small><strong>✨ Condition:</strong> <?= htmlspecialchars((string) $listing['Item_Condition']) ?></small>
+                    </div>
+                    <div style="padding: 12px; background: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 2px; margin: 8px 0;">
+                        <small><strong>👤 Seller:</strong> <?= htmlspecialchars((string) $listing['User_Name']) ?></small><br>
+                        <?php if ($listing['Shop_Name']): ?>
+                            <small><strong>🏪 Shop:</strong> <?= htmlspecialchars((string) $listing['Shop_Name']) ?></small><br>
+                        <?php endif; ?>
+                    </div>
+                    <?php if ($listing['City'] || $listing['Number'] || $listing['Email']): ?>
+                        <div style="padding: 8px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 2px;">
+                            <?php if ($listing['City']): ?>
+                                <small><strong>📍</strong> <?= htmlspecialchars((string) $listing['City']) ?></small><br>
+                            <?php endif; ?>
+                            <?php if ($listing['Number']): ?>
+                                <small><strong>📱</strong> <?= htmlspecialchars((string) $listing['Number']) ?></small><br>
+                            <?php endif; ?>
+                            <?php if ($listing['Email']): ?>
+                                <small><strong>📧</strong> <a href="mailto:<?= htmlspecialchars((string) $listing['Email']) ?>" style="color: #2563eb;"><?= htmlspecialchars((string) $listing['Email']) ?></a></small>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>

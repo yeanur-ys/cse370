@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $perfumeId = (int) $_POST['perfume_id'];
         $removeStmt = $pdo->prepare("DELETE FROM Wishlist WHERE Perfume_ID = ? AND User_ID = ?");
         if ($removeStmt->execute([$perfumeId, $userId])) {
-            header("Location: /wishlist.php");
+            header("Location: wishlist.php");
             exit;
         }
     }
@@ -47,7 +47,7 @@ require_once __DIR__ . '/partials/header.php';
 
 <?php if (count($wishlist) === 0): ?>
     <div class="card">
-        <p>Your wishlist is empty. <a href="/perfumes.php">Browse perfumes and add to your wishlist</a></p>
+        <p>Your wishlist is empty. <a href="perfumes.php">Browse perfumes and add to your wishlist</a></p>
     </div>
 <?php else: ?>
     <div class="card">
@@ -61,7 +61,7 @@ require_once __DIR__ . '/partials/header.php';
                         <small><strong>Year:</strong> <?= htmlspecialchars((string) $item['Release_Year']) ?></small><br>
                     <?php endif; ?>
 
-                    <form method="POST" action="/wishlist.php" style="display: inline; margin-top: 8px;">
+                    <form method="POST" action="wishlist.php" style="display: inline; margin-top: 8px;">
                         <input type="hidden" name="perfume_id" value="<?= $item['Perfume_ID'] ?>">
                         <button type="submit" name="action" value="remove" class="btn-small" style="background: #ff6b6b;">
                             Remove

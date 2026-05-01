@@ -5,8 +5,6 @@ USE scentology;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Drop all tables in correct order (reverse of creation, respecting foreign keys)
-DROP TABLE IF EXISTS Dependent;
-DROP TABLE IF EXISTS Collection;
 DROP TABLE IF EXISTS Trade;
 DROP TABLE IF EXISTS Review;
 DROP TABLE IF EXISTS Wishlist;
@@ -29,7 +27,8 @@ CREATE TABLE IF NOT EXISTS User (
     User_Name VARCHAR(120) NOT NULL,
     Email VARCHAR(190) NOT NULL UNIQUE,
     Password VARCHAR(255) NOT NULL,
-    Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Collection TEXT -- Stores the basic user's collection items list
 );
 
 CREATE TABLE IF NOT EXISTS Profile (
@@ -37,16 +36,7 @@ CREATE TABLE IF NOT EXISTS Profile (
     Number VARCHAR(50) DEFAULT '',
     City VARCHAR(120) DEFAULT '',
     BIO TEXT,
-    Curator_Level VARCHAR(50) DEFAULT 'Novice',
     CONSTRAINT fk_profile_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS Dependent (
-    Dependent_ID INT AUTO_INCREMENT PRIMARY KEY,
-    User_ID INT NOT NULL,
-    Name VARCHAR(150) NOT NULL,
-    Relationship VARCHAR(100) NOT NULL,
-    CONSTRAINT fk_dependent_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Seller (
@@ -57,13 +47,34 @@ CREATE TABLE IF NOT EXISTS Seller (
 
 CREATE TABLE IF NOT EXISTS Shop (
     Shop_ID INT AUTO_INCREMENT PRIMARY KEY,
-    User_ID INT NULL, 
+    User_ID INT NULL, -- Tracks which seller owns it explicitly based on the business logic constraint
     Shop_Name VARCHAR(150) NOT NULL,
     Address VARCHAR(255) NOT NULL,
     Latitude DECIMAL(10, 7) NULL,
     Longitude DECIMAL(10, 7) NULL,
     Stock TEXT,
     CONSTRAINT fk_shop_seller FOREIGN KEY (User_ID) REFERENCES Seller(User_ID) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS Listing (
+    Listing_ID INT AUTO_INCREMENT PRIMARY KEY,
+    User_ID INT NOT NULL, -- Only sellers post these
+    Item_Name VARCHAR(200) NOT NULL,
+    Quantity INT DEFAULT 1,
+    Price DECIMAL(10,2) NOT NULL,
+    Item_Condition VARCHAR(100) DEFAULT 'New',
+    Status VARCHAR(50) DEFAULT 'Available',
+    CONSTRAINT fk_listing_seller FOREIGN KEY (User_ID) REFERENCES Seller(User_ID) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Trade (
+    Trade_ID INT AUTO_INCREMENT PRIMARY KEY,
+    User_ID INT NOT NULL, -- Initiated by user
+    Offering VARCHAR(255) NOT NULL,
+    Desired VARCHAR(255) NOT NULL,
+    Status VARCHAR(50) DEFAULT 'Pending',
+    Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_trade_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Brand (
@@ -83,42 +94,9 @@ CREATE TABLE IF NOT EXISTS Perfume (
     CONSTRAINT fk_perfume_brand FOREIGN KEY (Brand_ID) REFERENCES Brand(Brand_ID) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Listing (
-    Listing_ID INT AUTO_INCREMENT PRIMARY KEY,
-    User_ID INT NOT NULL, 
-    Perfume_ID INT NOT NULL,
-    Quantity INT DEFAULT 1,
-    Price DECIMAL(10,2) NOT NULL,
-    Item_Condition VARCHAR(100) DEFAULT 'New',
-    Status VARCHAR(50) DEFAULT 'Available',
-    CONSTRAINT fk_listing_seller FOREIGN KEY (User_ID) REFERENCES Seller(User_ID) ON DELETE CASCADE,
-    CONSTRAINT fk_listing_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS Notes (
     Note_ID INT AUTO_INCREMENT PRIMARY KEY,
     Note_Name VARCHAR(100) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS Trade (
-    Trade_ID INT AUTO_INCREMENT PRIMARY KEY,
-    User_ID INT NOT NULL, 
-    Offering_Perfume_ID INT NOT NULL,
-    Desired_Note_ID INT NOT NULL,
-    Status VARCHAR(50) DEFAULT 'Pending',
-    Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_trade_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
-    CONSTRAINT fk_trade_offering FOREIGN KEY (Offering_Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE,
-    CONSTRAINT fk_trade_desired FOREIGN KEY (Desired_Note_ID) REFERENCES Notes(Note_ID) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS Collection (
-    Collection_ID INT AUTO_INCREMENT PRIMARY KEY,
-    User_ID INT NOT NULL,
-    Perfume_ID INT NOT NULL,
-    Purchase_Date DATE NULL,
-    CONSTRAINT fk_collection_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
-    CONSTRAINT fk_collection_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Has_Notes (
@@ -158,29 +136,29 @@ CREATE TABLE IF NOT EXISTS Review (
 );
 
 INSERT INTO User (User_Name, Email, Password)
-SELECT 'Demo User', 'demo@scentology.com', '\\\.vMR2'
+SELECT 'Demo User', 'demo@scentology.com', '$2y$10$pvNExjAztfhNMEb5NdAfjOtVFhSKps1GRZkwqpmYchKQ56G3.vMR2'
 WHERE NOT EXISTS (SELECT 1 FROM User WHERE Email = 'demo@scentology.com');
 
 INSERT INTO User (User_Name, Email, Password)
-SELECT 'Alice Fragrance', 'alice@scentology.com', '\\\.vMR2'
+SELECT 'Alice Fragrance', 'alice@scentology.com', '$2y$10$pvNExjAztfhNMEb5NdAfjOtVFhSKps1GRZkwqpmYchKQ56G3.vMR2'
 WHERE NOT EXISTS (SELECT 1 FROM User WHERE Email = 'alice@scentology.com');
 
 INSERT INTO User (User_Name, Email, Password)
-SELECT 'Bob Niche', 'bob@scentology.com', '\\\.vMR2'
+SELECT 'Bob Niche', 'bob@scentology.com', '$2y$10$pvNExjAztfhNMEb5NdAfjOtVFhSKps1GRZkwqpmYchKQ56G3.vMR2'
 WHERE NOT EXISTS (SELECT 1 FROM User WHERE Email = 'bob@scentology.com');
 
-INSERT INTO Profile (User_ID, Number, City, BIO, Curator_Level)
-SELECT User_ID, '0123456789', 'Dhaka', 'Demo profile for testing', 'Expert'
+INSERT INTO Profile (User_ID, Number, City, BIO)
+SELECT User_ID, '0123456789', 'Dhaka', 'Demo profile for testing'
 FROM User u
 WHERE u.Email = 'demo@scentology.com'
 AND NOT EXISTS (SELECT 1 FROM Profile p WHERE p.User_ID = u.User_ID);
 
-INSERT INTO Profile (User_ID, Number, City, BIO, Curator_Level)
-SELECT User_ID, '01711000001', 'Dhaka', 'Lover of floral and citrus notes.', 'Novice' FROM User WHERE Email = 'alice@scentology.com'
+INSERT INTO Profile (User_ID, Number, City, BIO)
+SELECT User_ID, '01711000001', 'Dhaka', 'Lover of floral and citrus notes.' FROM User WHERE Email = 'alice@scentology.com'
 ON DUPLICATE KEY UPDATE City='Dhaka';
 
-INSERT INTO Profile (User_ID, Number, City, BIO, Curator_Level)
-SELECT User_ID, '01711000002', 'Chittagong', 'Collector of rare Ouds and Attars.', 'Master' FROM User WHERE Email = 'bob@scentology.com'
+INSERT INTO Profile (User_ID, Number, City, BIO)
+SELECT User_ID, '01711000002', 'Chittagong', 'Collector of rare Ouds and Attars.' FROM User WHERE Email = 'bob@scentology.com'
 ON DUPLICATE KEY UPDATE City='Chittagong';
 
 INSERT INTO Shop (Shop_Name, Address, Stock)
@@ -194,3 +172,4 @@ WHERE NOT EXISTS (SELECT 1 FROM Shop WHERE Shop_Name = 'Oud Master');
 INSERT INTO Shop (Shop_Name, Address, Stock)
 SELECT 'Niche Vault', 'Banani 11, Dhaka', 'Xerjoff, Amouage, Roja Parfums, Creed' 
 WHERE NOT EXISTS (SELECT 1 FROM Shop WHERE Shop_Name = 'Niche Vault');
+

@@ -8,7 +8,7 @@ require_once __DIR__ . '/../app/auth.php';
 $error = '';
 
 if (is_logged_in()) {
-    header('Location: /profile.php');
+    header('Location: profile.php');
     exit;
 }
 
@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Invalid credentials.';
         } else {
             login_user((int) $user['id']);
-            header('Location: /profile.php');
+            header('Location: profile.php');
             exit;
         }
     }
@@ -40,7 +40,7 @@ require_once __DIR__ . '/partials/header.php';
         <div class="alert error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
-    <form method="POST" action="/login.php">
+    <form method="POST" action="login.php">
         <label for="email">Email</label>
         <input type="email" id="email" name="email" required>
 

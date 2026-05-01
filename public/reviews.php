@@ -13,7 +13,7 @@ $pdo = db();
 $stmt = $pdo->prepare("
     SELECT r.Review_ID, r.Rating, r.Comment, r.Created_at,
            p.Perfume_ID, p.Name, b.Brand_Name, u.User_Name,
-           (SELECT AVG(Rating) FROM Review WHERE Perfume_ID = p.Perfume_ID) as Avg_Rating,
+           COALESCE((SELECT AVG(Rating) FROM Review WHERE Perfume_ID = p.Perfume_ID), 0) as Avg_Rating,
            (SELECT COUNT(*) FROM Review WHERE Perfume_ID = p.Perfume_ID) as Review_Count
     FROM Review r
     JOIN Perfume p ON r.Perfume_ID = p.Perfume_ID
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
             $insertStmt = $pdo->prepare("INSERT INTO Review (Perfume_ID, User_ID, Rating, Comment) VALUES (?, ?, ?, ?)");
             if ($insertStmt->execute([$perfumeId, $user['id'], $rating, $comment])) {
                 $success = 'Review submitted successfully!';
-                header("Refresh:2; url=/reviews.php");
+                header("Refresh:2; url=reviews.php");
             } else {
                 $error = 'Failed to submit review.';
             }
@@ -83,7 +83,7 @@ require_once __DIR__ . '/partials/header.php';
 <?php if (is_logged_in()): ?>
     <div class="card">
         <h3>Post a Review</h3>
-        <form method="POST" action="/reviews.php">
+        <form method="POST" action="reviews.php">
             <label for="perfume_id">Select Perfume</label>
             <select id="perfume_id" name="perfume_id" required>
                 <option value="">-- Choose a Perfume --</option>
@@ -112,7 +112,7 @@ require_once __DIR__ . '/partials/header.php';
     </div>
 <?php else: ?>
     <div class="card">
-        <p><a href="/login.php">Login</a> to post a review.</p>
+        <p><a href="login.php">Login</a> to post a review.</p>
     </div>
 <?php endif; ?>
 
@@ -127,8 +127,8 @@ require_once __DIR__ . '/partials/header.php';
                 <strong><?= htmlspecialchars((string) $review['Brand_Name']) ?> - <?= htmlspecialchars((string) $review['Name']) ?></strong><br>
                 <small>Reviewed by: <?= htmlspecialchars((string) $review['User_Name']) ?> on <?= date('M d, Y', strtotime((string) $review['Created_at'])) ?></small><br>
                 <small>Rating: <?= str_repeat('⭐', $review['Rating']) ?> (<?= $review['Rating'] ?>/5)</small>
-                <?php if ($review['Avg_Rating']): ?>
-                    <small style="display: block; margin-top: 4px;">Average: <?= round($review['Avg_Rating'], 1) ?>/5 (<?= $review['Review_Count'] ?> reviews)</small>
+                <?php if ($review['Avg_Rating'] > 0): ?>
+                    <small style="display: block; margin-top: 4px; color: #059669;"><strong>✓ Average: <?= round((float) $review['Avg_Rating'], 1) ?>/5 (<?= (int) $review['Review_Count'] ?> reviews)</strong></small>
                 <?php endif; ?>
                 <?php if ($review['Comment']): ?>
                     <p style="margin-top: 8px; font-style: italic;">

@@ -61,12 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
     if ($action === 'add_wishlist' && $perfumeId > 0) {
         $addStmt = $pdo->prepare("INSERT IGNORE INTO Wishlist (Perfume_ID, User_ID) VALUES (?, ?)");
         $addStmt->execute([$perfumeId, $user['id']]);
-        header("Location: /perfumes.php");
+        header("Location: perfumes.php");
         exit;
     } elseif ($action === 'remove_wishlist' && $perfumeId > 0) {
         $removeStmt = $pdo->prepare("DELETE FROM Wishlist WHERE Perfume_ID = ? AND User_ID = ?");
         $removeStmt->execute([$perfumeId, $user['id']]);
-        header("Location: /perfumes.php");
+        header("Location: perfumes.php");
         exit;
     }
 }
@@ -87,7 +87,7 @@ require_once __DIR__ . '/partials/header.php';
 
 <div class="card">
     <h3>Filter by Brand</h3>
-    <form method="GET" action="/perfumes.php">
+    <form method="GET" action="perfumes.php">
         <select name="brand">
             <option value="">All Brands</option>
             <?php foreach ($brands as $brand): ?>
@@ -114,13 +114,14 @@ require_once __DIR__ . '/partials/header.php';
                             <img src="<?= htmlspecialchars((string) $perfume['Image_URL']) ?>" 
                                  alt="<?= htmlspecialchars((string) $perfume['Name']) ?>" 
                                  style="width: 100%; height: 100%; object-fit: cover;"
-                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\"text-align: center; width: 100%;\">🧴 No image</div>'">
+                                 onerror="this.style.display='none';">
+                            <div class="no-image" style="text-align: center; width: 100%;">🧴 No image</div>
                         <?php else: ?>
                             <div style="text-align: center; width: 100%;">🧴 No image</div>
                         <?php endif; ?>
                     </div>
                     <strong>
-                        <a href="/perfume-detail.php?id=<?= $perfume['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;">
+                        <a href="perfume-detail.php?id=<?= $perfume['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;">
                             <?= htmlspecialchars((string) $perfume['Name']) ?>
                         </a>
                     </strong><br>
@@ -133,7 +134,7 @@ require_once __DIR__ . '/partials/header.php';
                     <?php endif; ?>
 
                     <?php if (is_logged_in()): ?>
-                        <form method="POST" action="/perfumes.php" style="display: inline;">
+                        <form method="POST" action="perfumes.php" style="display: inline;">
                             <input type="hidden" name="perfume_id" value="<?= $perfume['Perfume_ID'] ?>">
                             <?php if (in_array($perfume['Perfume_ID'], $userWishlist)): ?>
                                 <button type="submit" name="action" value="remove_wishlist" class="btn-small" style="background: #ff6b6b;">
@@ -146,7 +147,7 @@ require_once __DIR__ . '/partials/header.php';
                             <?php endif; ?>
                         </form>
                     <?php else: ?>
-                        <small><a href="/login.php">Login to add to wishlist</a></small>
+                        <small><a href="login.php">Login to add to wishlist</a></small>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>

@@ -10,7 +10,7 @@ $user = is_logged_in() ? get_user_with_profile($_SESSION['user_id']) : null;
 $perfumeId = (int) ($_GET['id'] ?? 0);
 
 if ($perfumeId <= 0) {
-    header("Location: /perfumes.php");
+    header("Location: perfumes.php");
     exit;
 }
 
@@ -32,7 +32,7 @@ $perfumeStmt->execute([$perfumeId]);
 $perfume = $perfumeStmt->fetch();
 
 if (!$perfume) {
-    header("Location: /perfumes.php");
+    header("Location: perfumes.php");
     exit;
 }
 
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
                 ON DUPLICATE KEY UPDATE Rating = ?, Comment = ?, Created_at = NOW()
             ");
             $reviewInsertStmt->execute([$perfumeId, $user['id'], $rating, $comment, $rating, $comment]);
-            header("Location: /perfume-detail.php?id=$perfumeId");
+            header("Location: perfume-detail.php?id=$perfumeId");
             exit;
         }
     }
@@ -121,7 +121,7 @@ require_once __DIR__ . '/partials/header.php';
             <h1><?= htmlspecialchars((string) $perfume['Name']) ?></h1>
             
             <p style="margin: 15px 0;">
-                <strong>Brand:</strong> <a href="/perfumes.php?brand=<?= $perfume['Brand_ID'] ?>"><?= htmlspecialchars((string) $perfume['Brand_Name']) ?></a>
+                <strong>Brand:</strong> <a href="perfumes.php?brand=<?= $perfume['Brand_ID'] ?>"><?= htmlspecialchars((string) $perfume['Brand_Name']) ?></a>
             </p>
 
             <?php if ($perfume['Price']): ?>
@@ -139,7 +139,7 @@ require_once __DIR__ . '/partials/header.php';
 
             <!-- Wishlist Button -->
             <?php if (is_logged_in()): ?>
-                <form method="POST" action="/perfume-detail.php?id=<?= $perfumeId ?>" style="margin: 20px 0;">
+                <form method="POST" action="perfume-detail.php?id=<?= $perfumeId ?>" style="margin: 20px 0;">
                     <?php if ($inWishlist): ?>
                         <button type="submit" name="action" value="remove_wishlist" class="btn-large" style="background: #ff6b6b; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; color: white;">
                             ❤️ Remove from Wishlist
@@ -152,7 +152,7 @@ require_once __DIR__ . '/partials/header.php';
                 </form>
             <?php else: ?>
                 <p style="margin: 20px 0;">
-                    <a href="/login.php" style="color: #3498db; text-decoration: none; font-weight: bold;">Login</a> to add to wishlist
+                    <a href="login.php" style="color: #3498db; text-decoration: none; font-weight: bold;">Login</a> to add to wishlist
                 </p>
             <?php endif; ?>
 
@@ -173,7 +173,7 @@ require_once __DIR__ . '/partials/header.php';
     <?php if (is_logged_in()): ?>
         <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
             <h3>Add Your Review</h3>
-            <form method="POST" action="/perfume-detail.php?id=<?= $perfumeId ?>">
+            <form method="POST" action="perfume-detail.php?id=<?= $perfumeId ?>">
                 <div style="margin-bottom: 15px;">
                     <label for="rating"><strong>Rating:</strong></label><br>
                     <select name="rating" id="rating" required style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
@@ -195,7 +195,7 @@ require_once __DIR__ . '/partials/header.php';
             </form>
         </div>
     <?php else: ?>
-        <p><a href="/login.php" style="color: #3498db; text-decoration: none; font-weight: bold;">Login</a> to leave a review</p>
+        <p><a href="login.php" style="color: #3498db; text-decoration: none; font-weight: bold;">Login</a> to leave a review</p>
     <?php endif; ?>
 
     <!-- Display Reviews -->

@@ -37,12 +37,12 @@ require_once __DIR__ . '/partials/header.php';
             <?php foreach ($brands as $brand): ?>
                 <div class="shop-item">
                     <strong>
-                        <a href="/perfumes.php?brand=<?= $brand['Brand_ID'] ?>" style="color: inherit; text-decoration: none;">
+                        <a href="perfumes.php?brand=<?= $brand['Brand_ID'] ?>" style="color: inherit; text-decoration: none;">
                             <?= htmlspecialchars((string) $brand['Brand_Name']) ?>
                         </a>
                     </strong><br>
                     <small>Perfumes: <?= htmlspecialchars((string) $brand['Perfume_Count']) ?></small><br>
-                    <a href="/perfumes.php?brand=<?= $brand['Brand_ID'] ?>" style="text-decoration: none; color: #007bff;">
+                    <a href="perfumes.php?brand=<?= $brand['Brand_ID'] ?>" style="text-decoration: none; color: #007bff;">
                         View Perfumes →
                     </a>
                 </div>

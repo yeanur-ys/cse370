@@ -59,7 +59,7 @@ require_once __DIR__ . '/partials/header.php';
 <?php if ($user && $user['is_seller']): ?>
 <div class="card">
     <h3>Register Shop</h3>
-    <form method="POST" action="/shops.php">
+    <form method="POST" action="shops.php">
         <label for="shop_name">Shop Name</label>
         <input type="text" id="shop_name" name="shop_name" required>
 

@@ -8,7 +8,7 @@ require_once __DIR__ . '/../app/auth.php';
 $error = '';
 
 if (is_logged_in()) {
-    header('Location: /profile.php');
+    header('Location: profile.php');
     exit;
 }
 
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $userId = create_user($fullName, $email, $password, $isSeller);
         login_user($userId);
-        header('Location: /profile.php');
+        header('Location: profile.php');
         exit;
     }
 }
@@ -44,7 +44,7 @@ require_once __DIR__ . '/partials/header.php';
         <div class="alert error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
-    <form method="POST" action="/signup.php">
+    <form method="POST" action="signup.php">
         <label for="full_name">User Name</label>
         <input type="text" id="full_name" name="full_name" required>
 

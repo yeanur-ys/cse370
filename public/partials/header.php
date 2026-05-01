@@ -12,24 +12,24 @@ ensure_session_started();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars(APP_NAME) ?></title>
-    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
     <nav class="nav">
-        <a href="/index.php">Home</a>
-        <a href="/shops.php">Shops</a>
-        <a href="/perfumes.php">Perfumes</a>
-        <a href="/brands.php">Brands</a>
+        <a href="index.php">Home</a>
+        <a href="shops.php">Shops</a>
+        <a href="perfumes.php">Perfumes</a>
+        <a href="brands.php">Brands</a>
         <?php if (is_logged_in()): ?>
-            <a href="/listings.php">Listings</a>
-            <a href="/trades.php">Trades</a>
-            <a href="/wishlist.php">Wishlist</a>
-            <a href="/reviews.php">Reviews</a>
-            <a href="/profile.php">Profile</a>
-            <a href="/logout.php">Logout</a>
+            <a href="listings.php">Listings</a>
+            <a href="trades.php">Trades</a>
+            <a href="wishlist.php">Wishlist</a>
+            <a href="reviews.php">Reviews</a>
+            <a href="profile.php">Profile</a>
+            <a href="logout.php">Logout</a>
         <?php else: ?>
-            <a href="/login.php">Login</a>
-            <a href="/signup.php">Sign Up</a>
+            <a href="login.php">Login</a>
+            <a href="signup.php">Sign Up</a>
         <?php endif; ?>
     </nav>
     <main class="container">
