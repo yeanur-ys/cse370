@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS Perfume (
     Name VARCHAR(200) NOT NULL,
     Release_Year INT,
     Note_ID INT,
+    Price DECIMAL(10,2) DEFAULT 0,
+    Image_URL VARCHAR(500),
     CONSTRAINT fk_perfume_brand FOREIGN KEY (Brand_ID) REFERENCES Brand(Brand_ID) ON DELETE CASCADE
 );
 

@@ -14,7 +14,7 @@ $noteFilter = trim((string) ($_GET['note'] ?? ''));
 $pdo = db();
 
 $query = "
-    SELECT p.Perfume_ID, p.Name, p.Release_Year, b.Brand_Name, b.Brand_ID,
+    SELECT p.Perfume_ID, p.Name, p.Release_Year, p.Price, p.Image_URL, b.Brand_Name, b.Brand_ID,
            GROUP_CONCAT(n.Note_Name SEPARATOR ', ') as Notes
     FROM Perfume p
     JOIN Brand b ON p.Brand_ID = b.Brand_ID
@@ -97,14 +97,19 @@ require_once __DIR__ . '/partials/header.php';
         <div class="grid">
             <?php foreach ($perfumes as $perfume): ?>
                 <div class="shop-item">
+                    <?php if ($perfume['Image_URL']): ?>
+                        <div class="perfume-image" style="width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 10px;">
+                            <img src="<?= htmlspecialchars((string) $perfume['Image_URL']) ?>" alt="<?= htmlspecialchars((string) $perfume['Name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                    <?php endif; ?>
                     <strong>
                         <a href="/perfume-detail.php?id=<?= $perfume['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;">
                             <?= htmlspecialchars((string) $perfume['Name']) ?>
                         </a>
                     </strong><br>
                     <small><strong>Brand:</strong> <?= htmlspecialchars((string) $perfume['Brand_Name']) ?></small><br>
-                    <?php if ($perfume['Release_Year']): ?>
-                        <small><strong>Year:</strong> <?= htmlspecialchars((string) $perfume['Release_Year']) ?></small><br>
+                    <?php if ($perfume['Price']): ?>
+                        <small style="color: #e74c3c; font-weight: bold;">💰 ৳ <?= number_format((float) $perfume['Price']) ?></small><br>
                     <?php endif; ?>
                     <?php if ($perfume['Notes']): ?>
                         <small><strong>Notes:</strong> <?= htmlspecialchars((string) $perfume['Notes']) ?></small><br>
