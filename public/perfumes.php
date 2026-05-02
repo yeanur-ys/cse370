@@ -112,28 +112,25 @@ require_once __DIR__ . '/partials/header.php';
         <div class="grid">
             <?php foreach ($perfumes as $perfume): ?>
                 <div class="shop-item">
-                    <div class="perfume-image" style="width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 10px; background: #e0e0e0; display: flex; align-items: center; justify-content: center; position: relative;">
+                    <div class="perfume-image" style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin-bottom: 10px; background: #e0e0e0;">
                         <?php if ($perfume['Image_URL']): ?>
                             <?php $imgUrl = asset_image_url((string) $perfume['Image_URL']); ?>
                             <img src="<?= $imgUrl ?>" 
                                  alt="<?= htmlspecialchars((string) $perfume['Name']) ?>" 
-                                 style="width: 100%; height: 100%; object-fit: cover;"
-                                 onerror="this.parentElement.innerHTML='<div style=\"text-align: center; width: 100%;\">🧴 No image</div>';">
+                                 style="width: 100%; height: 100%; object-fit: cover;">
                         <?php else: ?>
-                            <div style="text-align: center; width: 100%;">🧴 No image</div>
+                            <div style="text-align: center; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">🧴 No image</div>
                         <?php endif; ?>
                     </div>
-                    <strong>
-                        <a href="perfume-detail.php?id=<?= $perfume['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;">
-                            <?= htmlspecialchars((string) $perfume['Name']) ?>
-                        </a>
-                    </strong><br>
-                    <small><strong>Brand:</strong> <?= htmlspecialchars((string) $perfume['Brand_Name']) ?></small><br>
+                    <a href="perfume-detail.php?id=<?= $perfume['Perfume_ID'] ?>" style="color: inherit; text-decoration: none; font-weight: bold; display: block; margin: 8px 0; line-height: 1.3;">
+                        <?= htmlspecialchars((string) $perfume['Name']) ?>
+                    </a>
+                    <small style="display: block; margin: 4px 0;"><strong>Brand:</strong> <?= htmlspecialchars((string) $perfume['Brand_Name']) ?></small>
                     <?php if ($perfume['Price']): ?>
-                        <small style="color: #e74c3c; font-weight: bold;">💰 ৳ <?= number_format((float) $perfume['Price']) ?></small><br>
+                        <small style="color: #e74c3c; font-weight: bold; display: block; margin: 4px 0;">💰 ৳ <?= number_format((float) $perfume['Price']) ?></small>
                     <?php endif; ?>
                     <?php if ($perfume['Notes']): ?>
-                        <small><strong>Notes:</strong> <?= htmlspecialchars((string) $perfume['Notes']) ?></small><br>
+                        <small style="display: block; margin: 4px 0;"><strong>Notes:</strong> <?= htmlspecialchars((string) $perfume['Notes']) ?></small>
                     <?php endif; ?>
 
                     <?php if (is_logged_in()): ?>
