@@ -159,15 +159,18 @@ require_once __DIR__ . '/partials/header.php';
                         </div>
                     <?php endif; ?>
                     
-                    <?php if (is_logged_in() && ($listing['Status'] ?? 'Available') === 'Available' && (int) $listing['User_ID'] !== $userId): ?>
+                    <?php 
+                    $listingStatus = $listing['Status'] ?? 'Available';
+                    ?>
+                    <?php if (is_logged_in() && $listingStatus === 'Available' && (int) $listing['User_ID'] !== $userId): ?>
                         <form method="POST" action="listings.php" style="margin-top: 12px;">
                             <input type="hidden" name="action" value="purchase_listing">
                             <input type="hidden" name="listing_id" value="<?= $listing['Listing_ID'] ?>">
                             <button type="submit" style="background: #2563eb; width: 100%; padding: 10px;">🛒 Purchase</button>
                         </form>
-                    <?php elseif (($listing['Status'] ?? 'Available') !== 'Available'): ?>
+                    <?php elseif ($listingStatus !== 'Available'): ?>
                         <div style="margin-top: 12px; padding: 10px; background: #e0e7ff; border-radius: 6px; text-align: center; color: #4338ca; font-weight: bold;">
-                            ✓ <?= htmlspecialchars((string) ($listing['Status'] ?? '')) ?>
+                            ✓ <?= htmlspecialchars((string) $listingStatus) ?>
                         </div>
                     <?php endif; ?>
                 </div>
