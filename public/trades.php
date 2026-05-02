@@ -60,12 +60,16 @@ try {
         SELECT t.Trade_ID, t.User_ID, t.Offering_Perfume_ID, t.Desired_Note_ID, t.Status, t.Created_at,
                u.User_Name, u.Email, p.City, p.Number,
                perfume.Name as Offering_Perfume_Name,
+               GROUP_CONCAT(n.Note_Name SEPARATOR ', ') as Offering_Notes,
                note.Note_Name as Desired_Note_Name
         FROM Trade t
         JOIN User u ON t.User_ID = u.User_ID 
         LEFT JOIN Profile p ON u.User_ID = p.User_ID
         LEFT JOIN Perfume perfume ON t.Offering_Perfume_ID = perfume.Perfume_ID
+        LEFT JOIN Has_Notes hn ON perfume.Perfume_ID = hn.Perfume_ID
+        LEFT JOIN Notes n ON hn.Note_ID = n.Note_ID
         LEFT JOIN Notes note ON t.Desired_Note_ID = note.Note_ID
+        GROUP BY t.Trade_ID
         ORDER BY t.Created_at DESC
     ");
     $stmt->execute();
@@ -96,10 +100,11 @@ require_once __DIR__ . '/partials/header.php';
 <?php if (is_logged_in()): ?>
 <div class="card">
     <h3>Post Trade Request</h3>
+    <p><strong>How to use:</strong> Select the perfume you have and the fragrance notes/perfume you want to receive in exchange.</p>
     <form method="POST" action="trades.php">
         <input type="hidden" name="action" value="add_trade">
         
-        <label for="offering_perfume_id">What I have (Perfume to Offer)</label>
+        <label for="offering_perfume_id" style="font-weight: bold; color: #059669;">📤 What I Have (Perfume to Offer)</label>
         <select id="offering_perfume_id" name="offering_perfume_id" required>
             <option value="">-- Select a Perfume --</option>
             <?php 
@@ -116,9 +121,9 @@ require_once __DIR__ . '/partials/header.php';
             <?php endforeach; ?>
         </select>
 
-        <label for="desired_note_id">What I want (Fragrance Note)</label>
+        <label for="desired_note_id" style="font-weight: bold; color: #d97706; margin-top: 15px; display: block;">📥 What I Want (Fragrance Notes from any Perfume)</label>
         <select id="desired_note_id" name="desired_note_id" required>
-            <option value="">-- Select a Note --</option>
+            <option value="">-- Select Notes You Want to Receive --</option>
             <?php 
             $noteList = $pdo->query("SELECT Note_ID, Note_Name FROM Notes ORDER BY Note_Name")->fetchAll();
             foreach ($noteList as $note): ?>
@@ -127,8 +132,9 @@ require_once __DIR__ . '/partials/header.php';
                 </option>
             <?php endforeach; ?>
         </select>
+        <small style="color: #6b7280; display: block; margin-top: 5px;">💡 Other traders will offer perfumes containing these notes</small>
 
-        <button type="submit">Post Trade</button>
+        <button type="submit" style="margin-top: 15px;">📮 Post Trade Request</button>
     </form>
 </div>
 <?php endif; ?>
@@ -147,8 +153,12 @@ require_once __DIR__ . '/partials/header.php';
                     </span>
                     <div style="margin: 12px 0; padding: 12px; background: #f3f4f6; border-radius: 6px;">
                         <small><strong>📤 Offering:</strong></small><br>
-                        <small><?= htmlspecialchars((string) ($trade['Offering_Perfume_Name'] ?? 'Unknown')) ?></small><br>
-                        <small style="margin-top: 8px; display: block;"><strong>📥 Looking for:</strong></small><br>
+                        <small><?= htmlspecialchars((string) ($trade['Offering_Perfume_Name'] ?? 'Unknown')) ?></small>
+                        <?php if ($trade['Offering_Notes']): ?>
+                            <br><small style="color: #6b7280; font-size: 0.9rem;">📝 Notes: <?= htmlspecialchars((string) $trade['Offering_Notes']) ?></small>
+                        <?php endif; ?>
+                        <br><br>
+                        <small><strong>📥 Looking for:</strong></small><br>
                         <small><?= htmlspecialchars((string) ($trade['Desired_Note_Name'] ?? 'Unknown')) ?></small>
                     </div>
                     <?php if ($trade['City'] || $trade['Number']): ?>
