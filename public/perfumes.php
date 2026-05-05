@@ -56,7 +56,7 @@ if ($user && isset($pdo)) {
     $userWishlist = array_map('intval', array_column($wishlistStmt->fetchAll(), 'Perfume_ID'));
 }
 
-// Handle add/remove from wishlist
+// Handle add/remove from wishlist and buy perfume
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in() && $user && isset($pdo)) {
     $perfumeId = (int) ($_POST['perfume_id'] ?? 0);
     $action = $_POST['action'] ?? '';
@@ -71,6 +71,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in() && $user && isset($p
         $removeStmt->execute([$perfumeId, (int) $user['id']]);
         header("Location: perfumes.php");
         exit;
+    } elseif ($action === 'buy_perfume' && $perfumeId > 0) {
+        try {
+            // Get perfume price
+            $priceStmt = $pdo->prepare('SELECT Price FROM Perfume WHERE Perfume_ID = ?');
+            $priceStmt->execute([$perfumeId]);
+            $perf = $priceStmt->fetch();
+            $price = $perf ? (float) $perf['Price'] : 0;
+            
+            purchase_perfume((int) $user['id'], $perfumeId, $price, 1);
+            header("Location: perfumes.php?bought=1");
+            exit;
+        } catch (Exception $e) {
+            // Continue, error will show in page
+        }
     }
 }
 
@@ -81,6 +95,12 @@ require_once __DIR__ . '/partials/header.php';
     <h2>Perfume Catalog</h2>
     <p>Browse our collection of premium perfumes.</p>
 </div>
+
+<?php if (isset($_GET['bought']) && $_GET['bought'] === '1'): ?>
+    <div class="alert" style="background: #dcfce7; color: #166534; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #16a34a;">
+        <strong>✓ Success!</strong> Perfume added to your stock. <a href="profile.php?tab=purchases" style="color: #166534; font-weight: bold;">View your stock</a>
+    </div>
+<?php endif; ?>
 
 <?php if (isset($dbError)): ?>
     <div class="alert alert-error" style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
@@ -112,45 +132,50 @@ require_once __DIR__ . '/partials/header.php';
         <div class="grid">
             <?php foreach ($perfumes as $perfume): ?>
                 <div class="shop-item">
-                    <div class="perfume-image" style="width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 10px; background: #e0e0e0; display: flex; align-items: center; justify-content: center; position: relative;">
+                    <div class="perfume-image" style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin-bottom: 10px; background: #e0e0e0;">
                         <?php if ($perfume['Image_URL']): ?>
                             <?php $imgUrl = asset_image_url((string) $perfume['Image_URL']); ?>
                             <img src="<?= $imgUrl ?>" 
                                  alt="<?= htmlspecialchars((string) $perfume['Name']) ?>" 
-                                 style="width: 100%; height: 100%; object-fit: cover;"
-                                 onerror="this.parentElement.innerHTML='<div style=\"text-align: center; width: 100%;\">🧴 No image</div>';">
+                                 style="width: 100%; height: 100%; object-fit: cover;">
                         <?php else: ?>
-                            <div style="text-align: center; width: 100%;">🧴 No image</div>
+                            <div style="text-align: center; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">🧴 No image</div>
                         <?php endif; ?>
                     </div>
-                    <strong>
-                        <a href="perfume-detail.php?id=<?= $perfume['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;">
-                            <?= htmlspecialchars((string) $perfume['Name']) ?>
-                        </a>
-                    </strong><br>
-                    <small><strong>Brand:</strong> <?= htmlspecialchars((string) $perfume['Brand_Name']) ?></small><br>
+                    <a href="perfume-detail.php?id=<?= $perfume['Perfume_ID'] ?>" style="color: inherit; text-decoration: none; font-weight: bold; display: block; margin: 8px 0; line-height: 1.3;">
+                        <?= htmlspecialchars((string) $perfume['Name']) ?>
+                    </a>
+                    <small style="display: block; margin: 4px 0;"><strong>Brand:</strong> <?= htmlspecialchars((string) $perfume['Brand_Name']) ?></small>
                     <?php if ($perfume['Price']): ?>
-                        <small style="color: #e74c3c; font-weight: bold;">💰 ৳ <?= number_format((float) $perfume['Price']) ?></small><br>
+                        <small style="color: #e74c3c; font-weight: bold; display: block; margin: 4px 0;">💰 ৳ <?= number_format((float) $perfume['Price']) ?></small>
                     <?php endif; ?>
                     <?php if ($perfume['Notes']): ?>
-                        <small><strong>Notes:</strong> <?= htmlspecialchars((string) $perfume['Notes']) ?></small><br>
+                        <small style="display: block; margin: 4px 0;"><strong>Notes:</strong> <?= htmlspecialchars((string) $perfume['Notes']) ?></small>
                     <?php endif; ?>
 
                     <?php if (is_logged_in()): ?>
-                        <form method="POST" action="perfumes.php" style="display: inline;">
-                            <input type="hidden" name="perfume_id" value="<?= $perfume['Perfume_ID'] ?>">
-                            <?php if (in_array($perfume['Perfume_ID'], $userWishlist)): ?>
-                                <button type="submit" name="action" value="remove_wishlist" class="btn-small" style="background: #ff6b6b;">
-                                    ❤️ Remove from Wishlist
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                            <form method="POST" action="perfumes.php" style="flex: 1; min-width: 120px;">
+                                <input type="hidden" name="perfume_id" value="<?= $perfume['Perfume_ID'] ?>">
+                                <button type="submit" name="action" value="buy_perfume" class="btn-small" style="background: #10b981; width: 100%; padding: 8px;">
+                                    🛍️ Buy
                                 </button>
-                            <?php else: ?>
-                                <button type="submit" name="action" value="add_wishlist" class="btn-small">
-                                    🤍 Add to Wishlist
-                                </button>
-                            <?php endif; ?>
-                        </form>
+                            </form>
+                            <form method="POST" action="perfumes.php" style="flex: 1; min-width: 120px;">
+                                <input type="hidden" name="perfume_id" value="<?= $perfume['Perfume_ID'] ?>">
+                                <?php if (in_array($perfume['Perfume_ID'], $userWishlist)): ?>
+                                    <button type="submit" name="action" value="remove_wishlist" class="btn-small" style="background: #ff6b6b; width: 100%; padding: 8px;">
+                                        ❤️ Wishlist
+                                    </button>
+                                <?php else: ?>
+                                    <button type="submit" name="action" value="add_wishlist" class="btn-small" style="width: 100%; padding: 8px;">
+                                        🤍 Wishlist
+                                    </button>
+                                <?php endif; ?>
+                            </form>
+                        </div>
                     <?php else: ?>
-                        <small><a href="login.php">Login to add to wishlist</a></small>
+                        <small><a href="login.php" style="color: #3498db; font-weight: bold;">Login</a> to buy or add to wishlist</small>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>

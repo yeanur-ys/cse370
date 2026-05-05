@@ -81,6 +81,22 @@ try {
         
         echo "<p>✓ Perfume data inserted: $insertCount statements</p>";
     }
+
+    // Create Collection table
+    $collectionFile = __DIR__ . '/../database/add_collection_table.sql';
+    if (file_exists($collectionFile)) {
+        $collectionSql = file_get_contents($collectionFile);
+        try {
+            $pdo->exec($collectionSql);
+            echo "<p>✓ Collection table ready</p>";
+        } catch (PDOException $e) {
+            if (strpos($e->getMessage(), 'already exists') === false) {
+                echo "<p style='color: orange;'>Collection table: " . $e->getMessage() . "</p>";
+            } else {
+                echo "<p>✓ Collection table ready</p>";
+            }
+        }
+    }
     
     // Verify data
     $pdo->exec("USE " . DB_NAME);

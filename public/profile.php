@@ -11,7 +11,6 @@ require_login();
 
 $userId = current_user_id();
 if ($userId === null) {
-    // Extra defense: should already be handled by require_login()
     header('Location: login.php');
     exit;
 }
@@ -23,17 +22,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = trim((string) ($_POST['phone'] ?? ''));
     $city = trim((string) ($_POST['city'] ?? ''));
     $bio = trim((string) ($_POST['bio'] ?? ''));
-    $collection = trim((string) ($_POST['collection'] ?? ''));
 
     if ($fullName === '') {
         $error = 'Full name is required.';
     } else {
-        update_profile($userId, $fullName, $phone, $city, $bio, $collection);
+        update_profile((int) $userId, $fullName, $phone, $city, $bio);
         $success = 'Profile updated successfully.';
     }
 }
 
 $user = get_user_with_profile((int) $userId);
+$collection = get_user_collection((int) $userId);
+$myReviews = get_user_reviews((int) $userId);
+$purchases = get_user_purchases((int) $userId);
 
 require_once __DIR__ . '/partials/header.php';
 ?>
@@ -53,6 +54,8 @@ require_once __DIR__ . '/partials/header.php';
         <button class="tab-button active" onclick="showTab('profile', event)">📝 Profile Info</button>
         <button class="tab-button" onclick="showTab('collection', event)">💎 My Collection</button>
         <button class="tab-button" onclick="showTab('wishlist', event)">🤍 My Wishlist</button>
+        <button class="tab-button" onclick="showTab('purchases', event)">🛍️ My Stock (<?= count($purchases) ?>)</button>
+        <button class="tab-button" onclick="showTab('reviews', event)">⭐ My Reviews</button>
     </div>
 
     <!-- Profile Tab -->
@@ -90,16 +93,29 @@ require_once __DIR__ . '/partials/header.php';
 
     <!-- Collection Tab -->
     <div id="collection" class="tab-content">
-        <?php if (empty($user['is_seller'])): ?>
-            <div style="background: #f0f0f0; padding: 12px; border-radius: 8px;">
-                <p><strong>📖 My Fragrance Collection:</strong></p>
-                <p><em>View your <a href="wishlist.php" style="color: #2563eb; font-weight: bold;">wishlist</a> to see perfumes you love.</em></p>
-                <p>You can manage your collection through your wishlist and the reviews you post about perfumes you own.</p>
+        <p><strong>📚 My Fragrance Collection (<?= count($collection) ?> perfumes):</strong></p>
+        <?php if (count($collection) > 0): ?>
+            <div class="grid">
+            <?php foreach ($collection as $item): ?>
+                <div class="shop-item">
+                    <?php if ($item['Image_URL']): ?>
+                        <div style="width: 100%; height: 150px; overflow: hidden; border-radius: 8px; margin-bottom: 10px;">
+                            <img src="<?= htmlspecialchars(asset_image_url((string) $item['Image_URL'])) ?>" alt="<?= htmlspecialchars((string) $item['Perfume_Name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                    <?php endif; ?>
+                    <strong><a href="perfume-detail.php?id=<?= $item['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;"><?= htmlspecialchars((string) $item['Perfume_Name']) ?></a></strong><br>
+                    <small><?= htmlspecialchars((string) $item['Brand_Name']) ?></small><br>
+                    <?php if ($item['Price']): ?>
+                        <small style="color: #e74c3c; font-weight: bold;">৳ <?= number_format((float) $item['Price']) ?></small><br>
+                    <?php endif; ?>
+                    <?php if ($item['Purchase_Date']): ?>
+                        <small style="color: #666;">📅 <?= date('M d, Y', strtotime((string) $item['Purchase_Date'])) ?></small>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <div style="background: #fee2e2; padding: 12px; border-radius: 8px;">
-                <p>💼 Sellers don't have personal collections. Focus on managing your <a href="listings.php" style="color: #2563eb; font-weight: bold;">market listings</a> instead!</p>
-            </div>
+            <p><em>Your collection is empty. <a href="perfume-detail.php" style="color: #2563eb; font-weight: bold;">Add perfumes</a> from the catalog!</em></p>
         <?php endif; ?>
     </div>
 
@@ -117,7 +133,7 @@ require_once __DIR__ . '/partials/header.php';
                 WHERE w.User_ID = ?
                 ORDER BY b.Brand_Name, p.Name
             ");
-            $wishlistStmt->execute([$userId]);
+            $wishlistStmt->execute([(int) $userId]);
             $wishlistItems = $wishlistStmt->fetchAll();
             
             if (count($wishlistItems) > 0): ?>
@@ -144,6 +160,66 @@ require_once __DIR__ . '/partials/header.php';
             <p style="color: #991b1b;">Error loading wishlist: <?= htmlspecialchars((string) $e->getMessage()) ?></p>
         <?php } ?>
     </div>
+
+    <!-- Purchases/Stock Tab -->
+    <div id="purchases" class="tab-content">
+        <p><strong>🛍️ My Stock (<?= count($purchases) ?> purchases):</strong></p>
+        <?php if (count($purchases) > 0): ?>
+            <div class="grid">
+            <?php foreach ($purchases as $purchase): ?>
+                <div class="shop-item">
+                    <?php if ($purchase['Image_URL']): ?>
+                        <div style="width: 100%; height: 150px; overflow: hidden; border-radius: 8px; margin-bottom: 10px;">
+                            <img src="<?= htmlspecialchars(asset_image_url((string) $purchase['Image_URL'])) ?>" alt="<?= htmlspecialchars((string) $purchase['Perfume_Name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                    <?php endif; ?>
+                    <strong><a href="perfume-detail.php?id=<?= $purchase['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;"><?= htmlspecialchars((string) $purchase['Perfume_Name']) ?></a></strong><br>
+                    <small><?= htmlspecialchars((string) $purchase['Brand_Name']) ?></small><br>
+                    <?php if ($purchase['Price']): ?>
+                        <small style="color: #e74c3c; font-weight: bold;">৳ <?= number_format((float) $purchase['Price']) ?></small><br>
+                    <?php endif; ?>
+                    <small style="color: #666;">
+                        📦 Qty: <?= (int) $purchase['Quantity'] ?><br>
+                        📅 <?= date('M d, Y', strtotime((string) $purchase['Purchase_Date'])) ?>
+                    </small>
+                </div>
+            <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p><em>You haven't purchased any perfumes yet. <a href="perfumes.php" style="color: #2563eb; font-weight: bold;">Shop now</a>!</em></p>
+        <?php endif; ?>
+    </div>
+
+    <!-- Reviews Tab -->
+    <div id="reviews" class="tab-content">
+        <p><strong>⭐ My Reviews (<?= count($myReviews) ?> reviews):</strong></p>
+        <?php if (count($myReviews) > 0): ?>
+            <?php foreach ($myReviews as $review): ?>
+                <div style="padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <strong><a href="perfume-detail.php?id=<?= $review['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;">
+                                <?= htmlspecialchars((string) $review['Brand_Name']) ?> - <?= htmlspecialchars((string) $review['Perfume_Name']) ?>
+                            </a></strong><br>
+                            <small style="color: #666;">
+                                <?= str_repeat('⭐', (int) $review['Rating']) ?> (<?= htmlspecialchars((string) $review['Rating']) ?>/5)
+                            </small>
+                        </div>
+                        <small style="color: #999;">
+                            <?= date('M d, Y', strtotime((string) $review['Created_at'])) ?>
+                        </small>
+                    </div>
+                    <?php if ($review['Comment']): ?>
+                        <p style="margin-top: 10px; color: #333;">
+                            <?= htmlspecialchars((string) $review['Comment']) ?>
+                        </p>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p><em>You haven't written any reviews yet. <a href="perfumes.php" style="color: #2563eb; font-weight: bold;">Review some perfumes</a>!</em></p>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?php require_once __DIR__ . '/partials/footer.php'; ?>
@@ -151,18 +227,12 @@ require_once __DIR__ . '/partials/header.php';
 <script>
 function showTab(tabName, event) {
     event.preventDefault();
-    // Hide all tabs
     const tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => tab.classList.remove('active'));
-    
-    // Remove active from all buttons
     const buttons = document.querySelectorAll('.tab-button');
     buttons.forEach(btn => btn.classList.remove('active'));
-    
-    // Show selected tab
     document.getElementById(tabName).classList.add('active');
-    
-    // Mark button as active
     event.target.classList.add('active');
 }
 </script>
+

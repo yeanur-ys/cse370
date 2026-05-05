@@ -139,3 +139,85 @@ function update_profile(int $userId, string $fullName, string $phone, string $ci
         throw $error;
     }
 }
+
+// ── Collection helpers ────────────────────────────────────────────────────
+
+function get_user_collection(int $userId): array
+{
+    $stmt = db()->prepare("
+        SELECT c.Perfume_ID, c.Purchase_Date,
+               p.Name as Perfume_Name, p.Price, p.Image_URL, b.Brand_Name
+        FROM Collection c
+        JOIN Perfume p ON c.Perfume_ID = p.Perfume_ID
+        JOIN Brand b ON p.Brand_ID = b.Brand_ID
+        WHERE c.User_ID = ?
+        ORDER BY c.Purchase_Date DESC
+    ");
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll();
+}
+
+function is_in_collection(int $userId, int $perfumeId): bool
+{
+    $stmt = db()->prepare("SELECT 1 FROM Collection WHERE User_ID = ? AND Perfume_ID = ?");
+    $stmt->execute([$userId, $perfumeId]);
+    return (bool) $stmt->fetch();
+}
+
+function add_to_collection(int $userId, int $perfumeId, ?string $purchaseDate, string $notes = ''): void
+{
+    $stmt = db()->prepare("
+        INSERT IGNORE INTO Collection (User_ID, Perfume_ID, Purchase_Date, Notes)
+        VALUES (?, ?, ?, ?)
+    ");
+    $stmt->execute([$userId, $perfumeId, $purchaseDate ?: null, $notes]);
+}
+
+function remove_from_collection(int $userId, int $perfumeId): void
+{
+    $stmt = db()->prepare("DELETE FROM Collection WHERE User_ID = ? AND Perfume_ID = ?");
+    $stmt->execute([$userId, $perfumeId]);
+}
+
+// ── Review history helper ─────────────────────────────────────────────────
+
+function get_user_reviews(int $userId): array
+{
+    $stmt = db()->prepare("
+        SELECT r.Review_ID, r.Rating, r.Comment, r.Created_at,
+               p.Perfume_ID, p.Name as Perfume_Name, b.Brand_Name
+        FROM Review r
+        JOIN Perfume p ON r.Perfume_ID = p.Perfume_ID
+        JOIN Brand b ON p.Brand_ID = b.Brand_ID
+        WHERE r.User_ID = ?
+        ORDER BY r.Created_at DESC
+    ");
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll();
+}
+
+// ── Purchase helpers ────────────────────────────────────────────────────
+
+function get_user_purchases(int $userId): array
+{
+    $stmt = db()->prepare("
+        SELECT pu.Purchase_ID, pu.Perfume_ID, pu.Purchase_Date, pu.Price, pu.Quantity,
+               p.Name as Perfume_Name, p.Image_URL, b.Brand_Name
+        FROM Purchases pu
+        JOIN Perfume p ON pu.Perfume_ID = p.Perfume_ID
+        JOIN Brand b ON p.Brand_ID = b.Brand_ID
+        WHERE pu.User_ID = ?
+        ORDER BY pu.Purchase_Date DESC
+    ");
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll();
+}
+
+function purchase_perfume(int $userId, int $perfumeId, float $price = 0.0, int $quantity = 1): void
+{
+    $stmt = db()->prepare("
+        INSERT INTO Purchases (User_ID, Perfume_ID, Price, Quantity)
+        VALUES (?, ?, ?, ?)
+    ");
+    $stmt->execute([$userId, $perfumeId, $price, $quantity]);
+}

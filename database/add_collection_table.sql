@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS Collection (
+    User_ID    INT NOT NULL,
+    Perfume_ID INT NOT NULL,
+    Purchase_Date DATE NULL,
+    Notes      VARCHAR(255) NULL,
+    Added_At   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (User_ID, Perfume_ID),
+    FOREIGN KEY (User_ID)    REFERENCES User(User_ID)    ON DELETE CASCADE,
+    FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE
+);

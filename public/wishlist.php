@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/config.php';
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
+require_once __DIR__ . '/../app/assets.php';
 
 require_login();
 
@@ -27,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // Fetch user's wishlist
 $stmt = $pdo->prepare("
-    SELECT p.Perfume_ID, p.Name, p.Release_Year, b.Brand_Name
+    SELECT p.Perfume_ID, p.Name, p.Release_Year, p.Price, p.Image_URL, b.Brand_Name
     FROM Wishlist w
     JOIN Perfume p ON w.Perfume_ID = p.Perfume_ID
     JOIN Brand b ON p.Brand_ID = b.Brand_ID
@@ -55,8 +56,16 @@ require_once __DIR__ . '/partials/header.php';
         <div class="grid">
             <?php foreach ($wishlist as $item): ?>
                 <div class="shop-item">
-                    <strong><?= htmlspecialchars((string) $item['Name']) ?></strong><br>
+                    <?php if ($item['Image_URL']): ?>
+                        <div style="width: 100%; height: 150px; overflow: hidden; border-radius: 8px; margin-bottom: 10px;">
+                            <img src="<?= htmlspecialchars(asset_image_url((string) $item['Image_URL'])) ?>" alt="<?= htmlspecialchars((string) $item['Name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                    <?php endif; ?>
+                    <strong><a href="perfume-detail.php?id=<?= $item['Perfume_ID'] ?>" style="color: inherit; text-decoration: none;"><?= htmlspecialchars((string) $item['Name']) ?></a></strong><br>
                     <small><strong>Brand:</strong> <?= htmlspecialchars((string) $item['Brand_Name']) ?></small><br>
+                    <?php if ($item['Price']): ?>
+                        <small style="color: #e74c3c; font-weight: bold;">💰 ৳ <?= number_format((float) $item['Price']) ?></small><br>
+                    <?php endif; ?>
                     <?php if ($item['Release_Year']): ?>
                         <small><strong>Year:</strong> <?= htmlspecialchars((string) $item['Release_Year']) ?></small><br>
                     <?php endif; ?>
@@ -74,3 +83,4 @@ require_once __DIR__ . '/partials/header.php';
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/partials/footer.php'; ?>
+

@@ -57,13 +57,16 @@ $reviews = $reviewStmt->fetchAll();
 
 // Check if in wishlist
 $inWishlist = false;
+$inCollection = false;
 if ($user) {
     $wishStmt = $pdo->prepare("SELECT 1 FROM Wishlist WHERE Perfume_ID = ? AND User_ID = ?");
     $wishStmt->execute([$perfumeId, $user['id']]);
     $inWishlist = (bool) $wishStmt->fetch();
+
+    $inCollection = is_in_collection((int)$user['id'], $perfumeId);
 }
 
-// Handle wishlist actions
+// Handle wishlist and collection actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
     $action = $_POST['action'] ?? '';
     
@@ -75,6 +78,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
         $removeStmt = $pdo->prepare("DELETE FROM Wishlist WHERE Perfume_ID = ? AND User_ID = ?");
         $removeStmt->execute([$perfumeId, $user['id']]);
         $inWishlist = false;
+    } elseif ($action === 'add_collection') {
+        $purchaseDate = trim((string) ($_POST['purchase_date'] ?? ''));
+        $notes = trim((string) ($_POST['collection_notes'] ?? ''));
+        add_to_collection((int)$user['id'], $perfumeId, $purchaseDate ?: null, $notes);
+        $inCollection = true;
+    } elseif ($action === 'remove_collection') {
+        remove_from_collection((int)$user['id'], $perfumeId);
+        $inCollection = false;
     } elseif ($action === 'add_review') {
         $rating = (int) ($_POST['rating'] ?? 0);
         $comment = trim((string) ($_POST['comment'] ?? ''));
@@ -89,6 +100,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
             header("Location: perfume-detail.php?id=$perfumeId");
             exit;
         }
+    } elseif ($action === 'buy_perfume') {
+        $price = (float) ($perfume['Price'] ?? 0);
+        purchase_perfume((int)$user['id'], $perfumeId, $price, 1);
+        header("Location: perfume-detail.php?id=$perfumeId&bought=1");
+        exit;
     }
 }
 
@@ -112,10 +128,14 @@ require_once __DIR__ . '/partials/header.php';
             <div style="background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 400px;">
                 <?php if ($perfume['Image_URL']): ?>
                     <?php $imgUrl = asset_image_url((string) $perfume['Image_URL']); ?>
-                    <img src="<?= $imgUrl ?>" 
+                    <img id="detail-img-<?= $perfume['Perfume_ID'] ?>" src="<?= $imgUrl ?>" 
                          alt="<?= htmlspecialchars((string) $perfume['Name']) ?>"
                          style="width: 100%; max-width: 400px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-                         onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\"text-align: center; padding: 40px;\"><div style=\"font-size: 48px;\">🧴</div><p>Image unavailable</p></div>'">
+                         onerror="this.style.display='none'; document.getElementById('fallback-<?= $perfume['Perfume_ID'] ?>').style.display='block';">
+                    <div id="fallback-<?= $perfume['Perfume_ID'] ?>" style="display: none; text-align: center; padding: 40px;">
+                        <div style="font-size: 48px;">🧴</div>
+                        <p>Image unavailable</p>
+                    </div>
                 <?php else: ?>
                     <div style="text-align: center; padding: 40px;">
                         <div style="font-size: 48px;">🧴</div>
@@ -127,6 +147,12 @@ require_once __DIR__ . '/partials/header.php';
 
         <!-- Details Section -->
         <div style="flex: 1; min-width: 300px;">
+            <?php if (isset($_GET['bought']) && $_GET['bought'] === '1'): ?>
+                <div class="alert" style="background: #dcfce7; color: #166534; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #16a34a;">
+                    <strong>✓ Success!</strong> Perfume added to your stock. <a href="profile.php?tab=purchases" style="color: #166534; font-weight: bold;">View your stock</a>
+                </div>
+            <?php endif; ?>
+
             <h1><?= htmlspecialchars((string) $perfume['Name']) ?></h1>
             
             <p style="margin: 15px 0;">
@@ -146,6 +172,15 @@ require_once __DIR__ . '/partials/header.php';
                 </p>
             <?php endif; ?>
 
+            <!-- Buy Button -->
+            <?php if (is_logged_in()): ?>
+                <form method="POST" action="perfume-detail.php?id=<?= $perfumeId ?>" style="margin: 20px 0;">
+                    <button type="submit" name="action" value="buy_perfume" class="btn-large" style="background: #10b981; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; color: white; width: 100%; font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                        🛍️ Buy Now
+                    </button>
+                </form>
+            <?php endif; ?>
+
             <!-- Wishlist Button -->
             <?php if (is_logged_in()): ?>
                 <form method="POST" action="perfume-detail.php?id=<?= $perfumeId ?>" style="margin: 20px 0;">
@@ -159,9 +194,31 @@ require_once __DIR__ . '/partials/header.php';
                         </button>
                     <?php endif; ?>
                 </form>
+
+                <!-- Collection Form -->
+                <?php if ($inCollection): ?>
+                    <form method="POST" action="perfume-detail.php?id=<?= $perfumeId ?>" style="margin: 10px 0;">
+                        <button type="submit" name="action" value="remove_collection" class="btn-large" style="background: #e67e22; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; color: white; width: 100%;">
+                            📚 Remove from My Collection
+                        </button>
+                    </form>
+                <?php else: ?>
+                    <form method="POST" action="perfume-detail.php?id=<?= $perfumeId ?>" style="margin: 10px 0; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+                        <h4 style="margin-top: 0;">📚 Add to My Collection</h4>
+                        <label for="purchase_date" style="display: block; margin-bottom: 10px;"><strong>Purchase Date (optional):</strong></label>
+                        <input type="date" name="purchase_date" id="purchase_date" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px;">
+                        
+                        <label for="collection_notes" style="display: block; margin-bottom: 10px;"><strong>Notes (optional):</strong></label>
+                        <textarea name="collection_notes" id="collection_notes" rows="2" placeholder="e.g., Gift from Mom, Limited Edition..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px;"></textarea>
+                        
+                        <button type="submit" name="action" value="add_collection" class="btn-large" style="background: #27ae60; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; color: white; width: 100%;">
+                            ✓ Add to Collection
+                        </button>
+                    </form>
+                <?php endif; ?>
             <?php else: ?>
                 <p style="margin: 20px 0;">
-                    <a href="login.php" style="color: #3498db; text-decoration: none; font-weight: bold;">Login</a> to add to wishlist
+                    <a href="login.php" style="color: #3498db; text-decoration: none; font-weight: bold;">Login</a> to add to wishlist or collection
                 </p>
             <?php endif; ?>
 

@@ -106,14 +106,16 @@ CREATE TABLE IF NOT EXISTS Trade (
     Trade_ID INT AUTO_INCREMENT PRIMARY KEY,
     User_ID INT NOT NULL, 
     Offering_Perfume_ID INT NOT NULL,
-    Desired_Note_ID INT NOT NULL,
+    Desired_Note_ID INT NULL,
+    Desired_Perfume_ID INT NULL,
     Status VARCHAR(50) DEFAULT 'Pending',
     Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Accepted_By_User_ID INT NULL,
     Accepted_At TIMESTAMP NULL,
     CONSTRAINT fk_trade_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
     CONSTRAINT fk_trade_offering FOREIGN KEY (Offering_Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE,
-    CONSTRAINT fk_trade_desired FOREIGN KEY (Desired_Note_ID) REFERENCES Notes(Note_ID) ON DELETE CASCADE
+    CONSTRAINT fk_trade_desired_note FOREIGN KEY (Desired_Note_ID) REFERENCES Notes(Note_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_trade_desired_perfume FOREIGN KEY (Desired_Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Collection (
@@ -198,3 +200,14 @@ WHERE NOT EXISTS (SELECT 1 FROM Shop WHERE Shop_Name = 'Oud Master');
 INSERT INTO Shop (Shop_Name, Address, Stock)
 SELECT 'Niche Vault', 'Banani 11, Dhaka', 'Xerjoff, Amouage, Roja Parfums, Creed' 
 WHERE NOT EXISTS (SELECT 1 FROM Shop WHERE Shop_Name = 'Niche Vault');
+
+CREATE TABLE IF NOT EXISTS Purchases (
+    Purchase_ID INT AUTO_INCREMENT PRIMARY KEY,
+    User_ID INT NOT NULL,
+    Perfume_ID INT NOT NULL,
+    Purchase_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Price DECIMAL(10, 2),
+    Quantity INT DEFAULT 1,
+    CONSTRAINT fk_purchases_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_purchases_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE
+);

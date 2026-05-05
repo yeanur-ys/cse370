@@ -10,6 +10,12 @@ $error = '';
 $userId = current_user_id();
 $user = $userId !== null ? get_user_with_profile($userId) : null;
 
+$statusFilter = trim((string) ($_GET['status'] ?? 'Available'));
+$allowedStatuses = ['Available', 'Sold', 'Cancelled', 'All'];
+if (!in_array($statusFilter, $allowedStatuses, true)) {
+    $statusFilter = 'Available';
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'add_listing') {
@@ -39,6 +45,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $error = 'Invalid listing details. Please check name, price, and quantity.';
             }
         }
+    } elseif ($_POST['action'] === 'cancel_listing') {
+        $listingId = (int) ($_POST['listing_id'] ?? 0);
+        if ($listingId > 0 && is_logged_in() && $user) {
+            try {
+                $pdo = db();
+                $stmt = $pdo->prepare("UPDATE Listing SET Status = 'Cancelled' WHERE Listing_ID = ? AND User_ID = ?");
+                if ($stmt->execute([$listingId, (int) $user['id']])) {
+                    $success = 'Listing cancelled successfully.';
+                } else {
+                    $error = 'Failed to cancel listing. You may only cancel your own listings.';
+                }
+            } catch (Exception $e) {
+                $error = 'Database error: ' . htmlspecialchars($e->getMessage());
+            }
+        } else {
+            $error = 'Unable to cancel listing. Please ensure you are logged in.';
+        }
     } elseif ($_POST['action'] === 'purchase_listing') {
         $listingId = (int) ($_POST['listing_id'] ?? 0);
         if ($listingId > 0 && is_logged_in() && $user) {
@@ -59,18 +82,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Fetch all listings
+// Fetch listings with status filter
 try {
     $pdo = db();
-    $stmt = $pdo->prepare("
+    $sql = "
         SELECT l.*, s.Shop_Name, u.User_Name, u.Email, p.City, p.Number
         FROM Listing l
         JOIN User u ON l.User_ID = u.User_ID 
         LEFT JOIN Shop s ON s.User_ID = l.User_ID
         LEFT JOIN Profile p ON u.User_ID = p.User_ID
-        ORDER BY l.Listing_ID DESC
-    ");
-    $stmt->execute();
+    ";
+    $filterParams = [];
+    if ($statusFilter !== 'All') {
+        $sql .= " WHERE l.Status = ?";
+        $filterParams[] = $statusFilter;
+    }
+    $sql .= " ORDER BY l.Listing_ID DESC";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($filterParams);
     $listings = $stmt->fetchAll();
 } catch (Exception $e) {
     $listings = [];
@@ -84,7 +114,7 @@ require_once __DIR__ . '/partials/header.php';
 
 <div class="card">
     <h2>Market Listings</h2>
-    <p>Browse available perfumes listed by sellers.</p>
+    <p>Browse perfumes listed by sellers. Filter by status below.</p>
 
     <?php if ($error !== ''): ?>
         <div class="alert error"><?= htmlspecialchars($error) ?></div>
@@ -93,6 +123,16 @@ require_once __DIR__ . '/partials/header.php';
     <?php if ($success !== ''): ?>
         <div class="alert success"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
+
+    <!-- Status filter tabs -->
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+        <?php foreach ($allowedStatuses as $st): ?>
+            <a href="?status=<?= urlencode($st) ?>" 
+               style="padding: 8px 16px; background: <?= $st === $statusFilter ? '#2563eb' : '#e5e7eb' ?>; color: <?= $st === $statusFilter ? 'white' : '#333' ?>; text-decoration: none; border-radius: 6px; font-weight: <?= $st === $statusFilter ? 'bold' : 'normal' ?>;">
+                <?= htmlspecialchars($st) ?>
+            </a>
+        <?php endforeach; ?>
+    </div>
 </div>
 
 <?php if ($user && $user['is_seller']): ?>
@@ -123,16 +163,16 @@ require_once __DIR__ . '/partials/header.php';
 <?php endif; ?>
 
 <div class="card">
-    <h3>Current Listings</h3>
+    <h3>Listings (<?= count($listings) ?>)</h3>
     <?php if (count($listings) === 0): ?>
-        <p>No listings found.</p>
+        <p>No listings found for the selected status.</p>
     <?php else: ?>
         <div class="grid">
             <?php foreach ($listings as $listing): ?>
                 <div class="shop-item">
                     <strong style="color: #2563eb;">🏷️ <?= htmlspecialchars((string) $listing['Item_Name']) ?></strong>
                     <span style="display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; margin: 8px 0;">
-                        <?= htmlspecialchars((string) $listing['Status']) ?>
+                        <?= htmlspecialchars((string) ($listing['Status'] ?? 'Available')) ?>
                     </span>
                     <div style="margin: 12px 0; padding: 12px; background: #f3f4f6; border-radius: 6px;">
                         <small><strong>💰 Price:</strong> ৳<?= number_format((float) $listing['Price']) ?></small><br>
@@ -159,15 +199,25 @@ require_once __DIR__ . '/partials/header.php';
                         </div>
                     <?php endif; ?>
                     
-                    <?php if (is_logged_in() && ($listing['Status'] ?? 'Available') === 'Available' && (int) $listing['User_ID'] !== $userId): ?>
+                    <?php 
+                    $listingStatus = $listing['Status'] ?? 'Available';
+                    $isOwner = is_logged_in() && (int) $listing['User_ID'] === $userId;
+                    ?>
+                    <?php if (is_logged_in() && $listingStatus === 'Available' && !$isOwner): ?>
                         <form method="POST" action="listings.php" style="margin-top: 12px;">
                             <input type="hidden" name="action" value="purchase_listing">
                             <input type="hidden" name="listing_id" value="<?= $listing['Listing_ID'] ?>">
                             <button type="submit" style="background: #2563eb; width: 100%; padding: 10px;">🛒 Purchase</button>
                         </form>
-                    <?php elseif (($listing['Status'] ?? 'Available') !== 'Available'): ?>
+                    <?php elseif ($isOwner && $listingStatus === 'Available'): ?>
+                        <form method="POST" action="listings.php" style="margin-top: 12px;">
+                            <input type="hidden" name="action" value="cancel_listing">
+                            <input type="hidden" name="listing_id" value="<?= $listing['Listing_ID'] ?>">
+                            <button type="submit" style="background: #e74c3c; width: 100%; padding: 10px;">✕ Cancel Listing</button>
+                        </form>
+                    <?php elseif ($listingStatus !== 'Available'): ?>
                         <div style="margin-top: 12px; padding: 10px; background: #e0e7ff; border-radius: 6px; text-align: center; color: #4338ca; font-weight: bold;">
-                            ✓ <?= htmlspecialchars((string) ($listing['Status'] ?? '')) ?>
+                            ✓ <?= htmlspecialchars((string) $listingStatus) ?>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -177,3 +227,4 @@ require_once __DIR__ . '/partials/header.php';
 </div>
 
 <?php require_once __DIR__ . '/partials/footer.php'; ?>
+
