@@ -91,9 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in() && $user && isset($p
 require_once __DIR__ . '/partials/header.php';
 ?>
 
-<div class="card">
-    <h2>Perfume Catalog</h2>
-    <p>Browse our collection of premium perfumes.</p>
+<div class="card" style="background: linear-gradient(to right, #8b5cf6, #d946ef); color: white; padding: 40px 20px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+    <h2 style="margin: 0 0 10px 0; font-size: 2.5em;">Perfume Catalog</h2>
+    <p style="margin: 0; font-size: 1.2em; opacity: 0.9;">Browse our collection of premium perfumes.</p>
 </div>
 
 <?php if (isset($_GET['bought']) && $_GET['bought'] === '1'): ?>

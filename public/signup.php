@@ -37,9 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require_once __DIR__ . '/partials/header.php';
 ?>
-<div class="card">
-    <h2>Sign Up</h2>
+<div class="card" style="background: linear-gradient(to right, #10b981, #047857); color: white; padding: 40px 20px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+    <h2 style="margin: 0 0 10px 0; font-size: 2.5em;">Sign Up</h2>
+    <p style="margin: 0; font-size: 1.2em; opacity: 0.9;">Join the Scentology community today.</p>
+</div>
 
+<div class="card" style="max-width: 500px; margin: 0 auto;">
     <?php if ($error !== ''): ?>
         <div class="alert error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>

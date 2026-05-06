@@ -30,13 +30,13 @@ try {
     echo "<p>✓ Database selected</p>";
     
     // Read schema file
-    $schemaFile = __DIR__ . '/../database/schema.sql';
+    $schemaFile = __DIR__ . '/../database/init.sql';
     if (!file_exists($schemaFile)) {
-        throw new Exception("Schema file not found: $schemaFile");
+        throw new Exception("SQL Init file not found: $schemaFile");
     }
     
     $schema = file_get_contents($schemaFile);
-    echo "<p>✓ Schema file loaded</p>";
+    echo "<p>✓ SQL Init file loaded</p>";
     
     // Split by semicolon and execute
     $statements = array_filter(array_map('trim', explode(';', $schema)));
@@ -57,46 +57,7 @@ try {
         }
     }
     
-    echo "<p>✓ Schema statements executed: $executedCount</p>";
-    
-    // Read and execute inserts
-    $insertsFile = __DIR__ . '/../database/insert_perfumes.sql';
-    if (file_exists($insertsFile)) {
-        $inserts = file_get_contents($insertsFile);
-        $statements = array_filter(array_map('trim', explode(';', $inserts)));
-        $insertCount = 0;
-        
-        foreach ($statements as $statement) {
-            if (!empty($statement) && stripos($statement, 'INSERT') !== false) {
-                try {
-                    $pdo->exec($statement);
-                    $insertCount++;
-                } catch (PDOException $e) {
-                    if (strpos($e->getMessage(), 'Duplicate') === false) {
-                        echo "<p style='color: orange;'>Insert warning: " . substr($statement, 0, 40) . "...</p>";
-                    }
-                }
-            }
-        }
-        
-        echo "<p>✓ Perfume data inserted: $insertCount statements</p>";
-    }
-
-    // Create Collection table
-    $collectionFile = __DIR__ . '/../database/add_collection_table.sql';
-    if (file_exists($collectionFile)) {
-        $collectionSql = file_get_contents($collectionFile);
-        try {
-            $pdo->exec($collectionSql);
-            echo "<p>✓ Collection table ready</p>";
-        } catch (PDOException $e) {
-            if (strpos($e->getMessage(), 'already exists') === false) {
-                echo "<p style='color: orange;'>Collection table: " . $e->getMessage() . "</p>";
-            } else {
-                echo "<p>✓ Collection table ready</p>";
-            }
-        }
-    }
+    echo "<p>✓ Statements executed: $executedCount</p>";
     
     // Verify data
     $pdo->exec("USE " . DB_NAME);

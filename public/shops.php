@@ -99,7 +99,7 @@ require_once __DIR__ . '/partials/header.php';
     <?php if (count($shops) === 0): ?>
         <p>No shops found.</p>
     <?php else: ?>
-        <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+        <div class="grid">
             <?php foreach ($shops as $shop): ?>
                 <div class="shop-item" style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; display: flex; flex-direction: column;">
                     <div style="display: flex; align-items: flex-start; margin-bottom: 15px;">

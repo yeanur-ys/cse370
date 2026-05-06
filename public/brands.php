@@ -33,7 +33,7 @@ require_once __DIR__ . '/partials/header.php';
     <?php if (count($brands) === 0): ?>
         <p>No brands found.</p>
     <?php else: ?>
-        <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+        <div class="grid">
             <?php foreach ($brands as $brand): ?>
                 <a href="perfumes.php?brand=<?= $brand['Brand_ID'] ?>" class="shop-item" style="text-decoration: none; color: inherit; padding: 25px 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid #f3f4f6;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 15px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)';">
                     <strong style="font-size: 1.3em; color: #1f2937; margin-bottom: 10px;">

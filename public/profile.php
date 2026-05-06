@@ -93,7 +93,7 @@ require_once __DIR__ . '/partials/header.php';
 
     <!-- Collection Tab -->
     <div id="collection" class="tab-content">
-        <p><strong>📚 My Fragrance Collection (<?= count($collection) ?> perfumes):</strong></p>
+        <p><strong>📚 My Fragrance Collection:</strong></p>
         <?php if (count($collection) > 0): ?>
             <div class="grid">
             <?php foreach ($collection as $item): ?>
@@ -192,7 +192,7 @@ require_once __DIR__ . '/partials/header.php';
 
     <!-- Reviews Tab -->
     <div id="reviews" class="tab-content">
-        <p><strong>⭐ My Reviews (<?= count($myReviews) ?> reviews):</strong></p>
+        <p><strong>⭐ My Reviews:</strong></p>
         <?php if (count($myReviews) > 0): ?>
             <?php foreach ($myReviews as $review): ?>
                 <div style="padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">

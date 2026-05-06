@@ -1,133 +1,93 @@
 # 🚀 Scentology - Quick Start Guide
 
-## ✅ Server Status: **RUNNING on http://localhost:8001**
+Welcome to **Scentology**, a premium perfume marketplace and community hub where users can browse, buy, trade, and review perfumes.
 
-### 🎉 All Issues Fixed!
-
-Your Scentology marketplace is fully operational with all requested features:
-- ✅ Purchase system with buy buttons
-- ✅ Purchase history in profile stock tab
-- ✅ Perfume-to-perfume trades
-- ✅ Profile tabs working perfectly
+This guide will walk you through setting up the project locally on **Windows, macOS, and Linux** using port `8000`.
 
 ---
 
-## ⚡ Quick Access
+## 🛠️ Prerequisites
 
-### Main Pages
-- **Homepage** - http://localhost:8001
-- **Perfumes** - http://localhost:8001/perfumes.php
-- **Profile** - http://localhost:8001/profile.php
-- **Trades** - http://localhost:8001/trades.php
-- **Wishlist** - http://localhost:8001/wishlist.php
-- **Reviews** - http://localhost:8001/reviews.php
+Before you begin, ensure you have the following installed on your system:
+- **PHP** (v8.0 or newer)
+- **MySQL** (v8.0 or newer) or MariaDB
+- **XAMPP / MAMP / WAMP** (Optional, but recommended for beginners)
 
 ---
 
-## 🎯 Try These Features NOW
+## ⚙️ Step 1: Database Setup
 
-### 1️⃣ Buy a Perfume
-1. Go to Perfumes page
-2. Click **🛍️ Buy** button on any perfume
-3. See green success message
-4. Go to Profile → **🛍️ My Stock** tab
+Scentology uses a single initialization file to automatically set up the database, tables, and sample data.
 
-### 2️⃣ Trade Perfumes
-1. Go to Trades page
-2. Select perfume to offer
-3. Choose: **"Get Another Perfume"** or **"Get Fragrance Notes"**
-4. Pick desired item and create trade
+### 1. Start your MySQL Server
+- **Windows**: Open XAMPP Control Panel and start **MySQL**.
+- **macOS**: Open XAMPP/MAMP Control Panel and start **MySQL**, or run `brew services start mysql` if using Homebrew.
+- **Linux**: Run `sudo systemctl start mysql` or `sudo service mysql start`.
 
-### 3️⃣ View Your Purchases
-1. Go to Profile page
-2. Click **🛍️ My Stock** tab
-3. See all purchases with images and prices
-
----
-
-## 📋 Pages Available
-
-### Public Pages (No Login Required)
-- **Home** - http://localhost:8001/index.php
-- **Perfumes Catalog** - http://localhost:8001/perfumes.php
-- **Login** - http://localhost:8001/login.php
-- **Sign Up** - http://localhost:8001/signup.php
-
-### Logged-In User Pages
-- **Profile** - http://localhost:8001/profile.php (with 5 tabs!)
-- **Wishlist** - http://localhost:8001/wishlist.php
-- **Reviews** - http://localhost:8001/reviews.php
-- **Listings** - http://localhost:8001/listings.php
-- **Trades** - http://localhost:8001/trades.php
-
-### Admin/Setup Pages
-- **Database Setup** - http://localhost:8001/init-db.php
+### 2. Configure Database Credentials
+By default, the application looks for root access without a password. Open `app/config.php` and verify these settings match your local MySQL server:
+```php
+define('DB_HOST', '127.0.0.1'); // Ensure this is your DB host
+define('DB_PORT', 3306);
+define('DB_USER', 'root');
+define('DB_PASS', ''); // Add your mysql password if you have one
+define('DB_NAME', 'scentology');
+```
 
 ---
 
-## 🔧 Troubleshooting
+## 🌍 Step 2: Start the Local Server (Port 8000)
 
-### If you get database errors:
-1. Go to http://localhost:8001/init-db.php to initialize database
-2. Wait for "Database initialized successfully!" message
-3. Then view http://localhost:8001/perfumes.php
+We will use PHP's built-in development server to run the application on port `8000`. 
 
-### If MySQL isn't running:
-1. Make sure MySQL is running (check XAMPP Control Panel for mysqld)
-2. Check app/config.php for correct database credentials
+Open your terminal or command prompt, navigate to the root directory of the `cse370` project, and run the following command:
 
----
+### For Windows:
+```cmd
+cd path\to\your\folder\cse370
+php -S localhost:8000 -t public
+```
 
-## 📊 Database Status
+### For macOS / Linux:
+```bash
+cd /path/to/your/folder/cse370
+php -S localhost:8000 -t public
+```
 
-After running init-db.php, you should have:
-- **15 Brands** (Creed, Dior, Tom Ford, etc.)
-- **24 Perfumes** (complete with prices and notes)
-- **3 Sample Users** (ready to test)
-- **Purchases Table** (for tracking orders)
-- **Updated Trade System** (perfume-to-perfume support)
-
-Test User: 
-- Email: demo@scentology.com
-- Password: password
+*Note: The `-t public` flag ensures the server treats the `public` folder as the document root, which is required for security and routing.*
 
 ---
 
-## 🎯 New Features Implemented
+## 🚀 Step 3: Initialize the Project
 
-### ✅ Purchase System
-- Buy button on every perfume card
-- Purchase tracked in database
-- Order appears in "My Stock" tab
+Now that your server and database are running:
 
-### ✅ Enhanced Trade System
-- Trade perfumes for other perfumes
-- Trade perfumes for fragrance notes
-- Form toggles between options
-- Both types work seamlessly
+1. Open your web browser and go to:
+   **👉 http://localhost:8000/init-db.php**
+   
+2. This script will automatically:
+   - Create the `scentology` database.
+   - Set up all required tables (Users, Perfumes, Wishlist, Trades, etc.).
+   - Insert sample perfumes, brands, notes, and a test user.
 
-### ✅ Profile Stock Tab
-- Shows all purchases with images
-- Displays price paid and purchase date
-- Total count in tab header
-- Quick links to perfume details
-
-### ✅ Previous Features
-- Product Catalog with Images
-- Brand Filtering
-- Wishlist (login required)
-- Reviews & Ratings
-- User Profiles
-- Responsive Design
+3. Wait for the green **"Database initialized successfully!"** message.
 
 ---
 
-## 📝 Important Notes
+## 🎉 Step 4: Explore Scentology!
 
-- Server runs on **localhost:8001** (NOT 8000)
-- MySQL must be running via XAMPP
-- All images loaded from GitHub
-- Database auto-creates on first setup via init-db.php
-- All 4 critical issues have been fixed
+Once initialized, navigate to the homepage:
+**👉 http://localhost:8000/index.php**
 
-**Everything is ready to use!** 🚀
+### 🧪 Test User Account
+You can log in to explore user-only features (Wishlist, Trades, Stock tracking):
+- **Email**: `demo@scentology.com`
+- **Password**: `password`
+
+### 🌟 Available Features
+- **Public**: Browse the Perfume Catalog, Brands, and Shops. View Reviews.
+- **Users**: Add perfumes to your Wishlist, write Reviews, and track your Stock purchases.
+- **Trading Platform**: Request to trade a perfume you own for another perfume or note!
+- **Sellers**: Register shops, manage physical stock, and post community Listings.
+
+Happy scent hunting! 🧴✨

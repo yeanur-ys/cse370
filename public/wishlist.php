@@ -41,9 +41,9 @@ $wishlist = $stmt->fetchAll();
 require_once __DIR__ . '/partials/header.php';
 ?>
 
-<div class="card">
-    <h2>My Wishlist</h2>
-    <p><?= htmlspecialchars((string) $user['full_name']) ?>'s collection of desired perfumes.</p>
+<div class="card" style="background: linear-gradient(to right, #f43f5e, #be123c); color: white; padding: 40px 20px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+    <h2 style="margin: 0 0 10px 0; font-size: 2.5em;">My Wishlist</h2>
+    <p style="margin: 0; font-size: 1.2em; opacity: 0.9;"><?= htmlspecialchars((string) $user['full_name']) ?>'s collection of desired perfumes.</p>
 </div>
 
 <?php if (count($wishlist) === 0): ?>
