@@ -16,6 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $error = 'Login required.';
     } elseif ($_POST['action'] === 'add_trade') {
         $offeringPerfumeId = (int) ($_POST['offering_perfume_id'] ?? 0);
+        $quantity = (int) ($_POST['quantity'] ?? 1);
+        if ($quantity < 1) $quantity = 1;
         $desiredType = trim((string) ($_POST['desired_type'] ?? 'perfume'));
         $desiredPerfumeId = (int) ($_POST['desired_perfume_id'] ?? 0);
         $desiredNoteId = (int) ($_POST['desired_note_id'] ?? 0);
@@ -24,10 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             try {
                 $pdo = db();
                 $stmt = $pdo->prepare("
-                    INSERT INTO Trade (User_ID, Offering_Perfume_ID, Desired_Perfume_ID, Desired_Note_ID, Status) 
-                    VALUES (?, ?, ?, ?, 'Pending')
+                    INSERT INTO Trade (User_ID, Offering_Perfume_ID, Quantity, Desired_Perfume_ID, Desired_Note_ID, Status)
+                    VALUES (?, ?, ?, ?, ?, 'Pending')
                 ");
-                if ($stmt->execute([(int) $user['id'], $offeringPerfumeId, ($desiredType === 'perfume' ? $desiredPerfumeId : null), ($desiredType === 'note' ? $desiredNoteId : null)])) {
+                if ($stmt->execute([(int) $user['id'], $offeringPerfumeId, $quantity, ($desiredType === 'perfume' ? $desiredPerfumeId : null), ($desiredType === 'note' ? $desiredNoteId : null)])) {
                     $success = 'Trade request posted successfully!';
                 } else {
                     $error = 'Failed to post trade request.';
@@ -79,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 try {
     $pdo = db();
     $stmt = $pdo->prepare("
-        SELECT t.Trade_ID, t.User_ID, t.Offering_Perfume_ID, t.Desired_Perfume_ID, t.Desired_Note_ID, t.Status, t.Created_at,
+        SELECT t.Trade_ID, t.User_ID, t.Offering_Perfume_ID, t.Quantity, t.Desired_Perfume_ID, t.Desired_Note_ID, t.Status, t.Created_at,
                u.User_Name, u.Email, p.City, p.Number,
                perfume_off.Name as Offering_Perfume_Name, perfume_off.Brand_ID,
                GROUP_CONCAT(n_off.Note_Name SEPARATOR ', ') as Offering_Notes,
@@ -93,6 +95,7 @@ try {
         LEFT JOIN Notes n_off ON hn.Note_ID = n_off.Note_ID
         LEFT JOIN Perfume perfume_des ON t.Desired_Perfume_ID = perfume_des.Perfume_ID
         LEFT JOIN Notes note_des ON t.Desired_Note_ID = note_des.Note_ID
+        WHERE t.Status != 'Cancelled'
         GROUP BY t.Trade_ID
         ORDER BY t.Created_at DESC
     ");
@@ -130,7 +133,7 @@ require_once __DIR__ . '/partials/header.php';
             <div style="flex: 1; min-width: 250px; padding: 20px; border: 1px solid #10b981; border-radius: 8px; background: #ecfdf5;">
                 <h4 style="color: #047857; margin-top: 0; margin-bottom: 15px;">📤 I am Offering</h4>
                 <label for="offering_perfume_id" style="display: block; font-weight: bold; margin-bottom: 8px;">Select Perfume:</label>
-                <select id="offering_perfume_id" name="offering_perfume_id" required style="width: 100%; padding: 10px; border: 1px solid #a7f3d0; border-radius: 6px;">
+                <select id="offering_perfume_id" name="offering_perfume_id" required style="width: 100%; padding: 10px; border: 1px solid #a7f3d0; border-radius: 6px; margin-bottom: 10px;">
                     <option value="">-- Choose a Perfume --</option>
                     <?php 
                     $perfumeList = $pdo->query("SELECT p.Perfume_ID, p.Name, b.Brand_Name FROM Perfume p JOIN Brand b ON p.Brand_ID = b.Brand_ID ORDER BY b.Brand_Name, p.Name")->fetchAll();
@@ -140,6 +143,9 @@ require_once __DIR__ . '/partials/header.php';
                         </option>
                     <?php endforeach; ?>
                 </select>
+
+                <label for="quantity" style="display: block; font-weight: bold; margin-bottom: 8px;">Quantity:</label>
+                <input type="number" id="quantity" name="quantity" min="1" value="1" style="width: 100%; padding: 10px; border: 1px solid #a7f3d0; border-radius: 6px;">
             </div>
 
             <div style="flex: 1; min-width: 250px; padding: 20px; border: 1px solid #f59e0b; border-radius: 8px; background: #fffbeb;">
@@ -207,7 +213,7 @@ require_once __DIR__ . '/partials/header.php';
                     </span>
                     <div style="margin: 12px 0; padding: 12px; background: #f3f4f6; border-radius: 6px;">
                         <small><strong>📤 Offering:</strong></small><br>
-                        <small><?= htmlspecialchars((string) ($trade['Offering_Perfume_Name'] ?? 'Unknown')) ?></small>
+                        <small><?= htmlspecialchars((string) ($trade['Offering_Perfume_Name'] ?? 'Unknown')) ?> (Qty: <?= isset($trade['Quantity']) ? (int) $trade['Quantity'] : 1 ?>)</small>
                         <?php if ($trade['Offering_Notes']): ?>
                             <br><small style="color: #6b7280; font-size: 0.9rem;">📝 Notes: <?= htmlspecialchars((string) $trade['Offering_Notes']) ?></small>
                         <?php endif; ?>

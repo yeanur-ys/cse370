@@ -73,19 +73,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
     if ($action === 'add_wishlist') {
         $addStmt = $pdo->prepare("INSERT IGNORE INTO Wishlist (Perfume_ID, User_ID) VALUES (?, ?)");
         $addStmt->execute([$perfumeId, $user['id']]);
-        $inWishlist = true;
+        header("Location: perfume-detail.php?id=$perfumeId");
+        exit;
     } elseif ($action === 'remove_wishlist') {
         $removeStmt = $pdo->prepare("DELETE FROM Wishlist WHERE Perfume_ID = ? AND User_ID = ?");
         $removeStmt->execute([$perfumeId, $user['id']]);
-        $inWishlist = false;
+        header("Location: perfume-detail.php?id=$perfumeId");
+        exit;
     } elseif ($action === 'add_collection') {
         $purchaseDate = trim((string) ($_POST['purchase_date'] ?? ''));
         $notes = trim((string) ($_POST['collection_notes'] ?? ''));
         add_to_collection((int)$user['id'], $perfumeId, $purchaseDate ?: null, $notes);
-        $inCollection = true;
+        header("Location: perfume-detail.php?id=$perfumeId");
+        exit;
     } elseif ($action === 'remove_collection') {
         remove_from_collection((int)$user['id'], $perfumeId);
-        $inCollection = false;
+        header("Location: perfume-detail.php?id=$perfumeId");
+        exit;
     } elseif ($action === 'add_review') {
         $rating = (int) ($_POST['rating'] ?? 0);
         $comment = trim((string) ($_POST['comment'] ?? ''));

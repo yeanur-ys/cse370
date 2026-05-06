@@ -64,16 +64,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     } elseif ($_POST['action'] === 'purchase_listing') {
         $listingId = (int) ($_POST['listing_id'] ?? 0);
+        $sellerId = (int) ($_POST['seller_id'] ?? 0);
         if ($listingId > 0 && is_logged_in() && $user) {
             try {
                 $pdo = db();
+                $pdo->beginTransaction();
                 $stmt = $pdo->prepare("UPDATE Listing SET Status = 'Sold', Purchased_By_User_ID = ?, Purchased_At = NOW() WHERE Listing_ID = ?");
                 if ($stmt->execute([(int) $user['id'], $listingId])) {
+                     if ($sellerId > 0) {
+                         $sellerStmt = $pdo->prepare("UPDATE Seller SET Total_Sell = Total_Sell + 1 WHERE User_ID = ?");
+                         $sellerStmt->execute([$sellerId]);
+                     }
+                     $pdo->commit();
                     $success = 'Purchase successful! The seller has been notified.';
                 } else {
+                    $pdo->rollBack();
                     $error = 'Failed to purchase listing.';
                 }
             } catch (Exception $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
                 $error = 'Database error: ' . htmlspecialchars($e->getMessage());
             }
         } else {
@@ -239,6 +250,7 @@ require_once __DIR__ . '/partials/header.php';
                         <form method="POST" action="listings.php" style="margin-top: 12px;">
                             <input type="hidden" name="action" value="purchase_listing">
                             <input type="hidden" name="listing_id" value="<?= $listing['Listing_ID'] ?>">
+                            <input type="hidden" name="seller_id" value="<?= $listing['User_ID'] ?>">
                             <button type="submit" style="background: #2563eb; width: 100%; padding: 10px; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">🛒 Purchase</button>
                         </form>
                     <?php elseif ($isOwner && $listingStatus === 'Available'): ?>

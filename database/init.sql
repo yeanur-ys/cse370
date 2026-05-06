@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS Trade (
     Trade_ID INT AUTO_INCREMENT PRIMARY KEY,
     User_ID INT NOT NULL, 
     Offering_Perfume_ID INT NOT NULL,
+    Quantity INT DEFAULT 1,
     Desired_Note_ID INT NULL,
     Desired_Perfume_ID INT NULL,
     Status VARCHAR(50) DEFAULT 'Pending',
@@ -123,8 +124,11 @@ CREATE TABLE IF NOT EXISTS Collection (
     User_ID INT NOT NULL,
     Perfume_ID INT NOT NULL,
     Purchase_Date DATE NULL,
+    Notes VARCHAR(255) NULL,
+    Added_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_collection_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
-    CONSTRAINT fk_collection_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE
+    CONSTRAINT fk_collection_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_perfume (User_ID, Perfume_ID)
 );
 
 CREATE TABLE IF NOT EXISTS Has_Notes (
@@ -211,16 +215,7 @@ CREATE TABLE IF NOT EXISTS Purchases (
     CONSTRAINT fk_purchases_user FOREIGN KEY (User_ID) REFERENCES User(User_ID) ON DELETE CASCADE,
     CONSTRAINT fk_purchases_perfume FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS Collection (
-    User_ID    INT NOT NULL,
-    Perfume_ID INT NOT NULL,
-    Purchase_Date DATE NULL,
-    Notes      VARCHAR(255) NULL,
-    Added_At   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (User_ID, Perfume_ID),
-    FOREIGN KEY (User_ID)    REFERENCES User(User_ID)    ON DELETE CASCADE,
-    FOREIGN KEY (Perfume_ID) REFERENCES Perfume(Perfume_ID) ON DELETE CASCADE
-);
+
 -- Insert perfume note linkages using direct IDs
 INSERT IGNORE INTO Has_Notes (Perfume_ID, Note_ID) VALUES
 -- Pacific Rock Moss (ID 1)
@@ -551,8 +546,8 @@ INSERT INTO Perfume (Brand_ID, Name, Release_Year, Price, Image_URL) VALUES
 
 -- Link Perfumes to their Notes
 INSERT INTO Has_Notes (Perfume_ID, Note_ID) 
-SELECT p.Perfume_ID, n.Note_ID FROM Perfume p, Notes n
-WHERE (p.Name = 'Pacific Rock Moss' AND n.Note_Name IN ('Lemon', 'Sage', 'Geranium', 'Moss', 'Amber'))
+SELECT p.Perfume_ID, n.Note_ID FROM Perfume p JOIN Notes n ON
+(p.Name = 'Pacific Rock Moss' AND n.Note_Name IN ('Lemon', 'Sage', 'Geranium', 'Moss', 'Amber'))
    OR (p.Name = 'Side Effect' AND n.Note_Name IN ('Rum', 'Cinnamon', 'Tobacco', 'Saffron', 'Vanilla', 'Sandalwood'))
    OR (p.Name = 'Stronger With You Intensely' AND n.Note_Name IN ('Pink Pepper', 'Juniper', 'Violet', 'Toffee', 'Cinnamon', 'Lavender', 'Sage', 'Vanilla', 'Amber', 'Tonka Bean', 'Suede'))
    OR (p.Name = 'YSL Y' AND n.Note_Name IN ('Apple', 'Ginger', 'Bergamot', 'Sage', 'Juniper', 'Geranium', 'Amberwood', 'Tonka Bean', 'Vetiver'))
@@ -575,5 +570,5 @@ WHERE (p.Name = 'Pacific Rock Moss' AND n.Note_Name IN ('Lemon', 'Sage', 'Gerani
    OR (p.Name = 'Meteore' AND n.Note_Name IN ('Mandarin', 'Orange', 'Pepper', 'Neroli', 'Vetiver'))
    OR (p.Name = 'Symphony' AND n.Note_Name IN ('Grapefruit', 'Ginger', 'Citrus Accord', 'Musk'))
    OR (p.Name = 'Le Sables Roses' AND n.Note_Name IN ('Rose', 'Oud', 'Amber', 'Saffron'))
-   OR (p.Name = 'The One' AND n.Note_Name IN ('Grapefruit', 'Coriander', 'Basil', 'Ginger', 'Cardamom', 'Orange Blossom', 'Tobacco', 'Amber', 'Cedar'))
-ON DUPLICATE KEY UPDATE Note_ID = Note_ID;
+    OR (p.Name = 'The One' AND n.Note_Name IN ('Grapefruit', 'Coriander', 'Basil', 'Ginger', 'Cardamom', 'Orange Blossom', 'Tobacco', 'Amber', 'Cedar'))
+ON DUPLICATE KEY UPDATE Note_ID = VALUES(Note_ID);
