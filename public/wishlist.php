@@ -12,6 +12,11 @@ require_login();
 $userId = (int) current_user_id();
 $user = get_user_with_profile($userId);
 
+if ($user === null) {
+    header("Location: logout.php");
+    exit;
+}
+
 $pdo = db();
 
 // Handle remove from wishlist

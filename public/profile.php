@@ -115,7 +115,7 @@ require_once __DIR__ . '/partials/header.php';
             <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <p><em>Your collection is empty. <a href="perfume-detail.php" style="color: #2563eb; font-weight: bold;">Add perfumes</a> from the catalog!</em></p>
+            <p><em>Your collection is empty. <a href="perfumes.php" style="color: #2563eb; font-weight: bold;">Add perfumes</a> from the catalog!</em></p>
         <?php endif; ?>
     </div>
 

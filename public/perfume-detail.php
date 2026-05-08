@@ -58,12 +58,17 @@ $reviews = $reviewStmt->fetchAll();
 // Check if in wishlist
 $inWishlist = false;
 $inCollection = false;
+$inStock = false;
 if ($user) {
     $wishStmt = $pdo->prepare("SELECT 1 FROM Wishlist WHERE Perfume_ID = ? AND User_ID = ?");
     $wishStmt->execute([$perfumeId, $user['id']]);
     $inWishlist = (bool) $wishStmt->fetch();
 
     $inCollection = is_in_collection((int)$user['id'], $perfumeId);
+
+    $stockStmt = $pdo->prepare("SELECT 1 FROM Purchases WHERE Perfume_ID = ? AND User_ID = ?");
+    $stockStmt->execute([$perfumeId, $user['id']]);
+    $inStock = (bool) $stockStmt->fetch();
 }
 
 // Handle wishlist and collection actions
@@ -91,18 +96,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
         header("Location: perfume-detail.php?id=$perfumeId");
         exit;
     } elseif ($action === 'add_review') {
-        $rating = (int) ($_POST['rating'] ?? 0);
-        $comment = trim((string) ($_POST['comment'] ?? ''));
-        
-        if ($rating >= 1 && $rating <= 5) {
-            $reviewInsertStmt = $pdo->prepare("
-                INSERT INTO Review (Perfume_ID, User_ID, Rating, Comment)
-                VALUES (?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE Rating = ?, Comment = ?, Created_at = NOW()
-            ");
-            $reviewInsertStmt->execute([$perfumeId, $user['id'], $rating, $comment, $rating, $comment]);
-            header("Location: perfume-detail.php?id=$perfumeId");
-            exit;
+        if ($inCollection || $inStock) {
+            $rating = (int) ($_POST['rating'] ?? 0);
+            $comment = trim((string) ($_POST['comment'] ?? ''));
+            
+            if ($rating >= 1 && $rating <= 5) {
+                $reviewInsertStmt = $pdo->prepare("
+                    INSERT INTO Review (Perfume_ID, User_ID, Rating, Comment)
+                    VALUES (?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE Rating = ?, Comment = ?, Created_at = NOW()
+                ");
+                $reviewInsertStmt->execute([$perfumeId, $user['id'], $rating, $comment, $rating, $comment]);
+                header("Location: perfume-detail.php?id=$perfumeId");
+                exit;
+            }
+        } else {
+            $error = 'You can only review a perfume that is in your collection.';
         }
     } elseif ($action === 'buy_perfume') {
         $price = (float) ($perfume['Price'] ?? 0);
@@ -242,27 +251,31 @@ require_once __DIR__ . '/partials/header.php';
 
     <?php if (is_logged_in()): ?>
         <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-            <h3>Add Your Review</h3>
-            <form method="POST" action="perfume-detail.php?id=<?= $perfumeId ?>">
-                <div style="margin-bottom: 15px;">
-                    <label for="rating"><strong>Rating:</strong></label><br>
-                    <select name="rating" id="rating" required style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                        <option value="">Select rating...</option>
-                        <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
-                        <option value="4">⭐⭐⭐⭐ Good</option>
-                        <option value="3">⭐⭐⭐ Average</option>
-                        <option value="2">⭐⭐ Poor</option>
-                        <option value="1">⭐ Very Poor</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label for="comment"><strong>Comment:</strong></label><br>
-                    <textarea name="comment" id="comment" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px; box-sizing: border-box;"></textarea>
-                </div>
-                <button type="submit" name="action" value="add_review" class="btn-large" style="background: #27ae60; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; color: white;">
-                    Submit Review
-                </button>
-            </form>
+            <?php if ($inCollection || $inStock): ?>
+                <h3>Add Your Review</h3>
+                <form method="POST" action="perfume-detail.php?id=<?= $perfumeId ?>">
+                    <div style="margin-bottom: 15px;">
+                        <label for="rating"><strong>Rating:</strong></label><br>
+                        <select name="rating" id="rating" required style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                            <option value="">Select rating...</option>
+                            <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ Good</option>
+                            <option value="3">⭐⭐⭐ Average</option>
+                            <option value="2">⭐⭐ Poor</option>
+                            <option value="1">⭐ Very Poor</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="comment"><strong>Comment:</strong></label><br>
+                        <textarea name="comment" id="comment" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px; box-sizing: border-box;"></textarea>
+                    </div>
+                    <button type="submit" name="action" value="add_review" class="btn-large" style="background: #27ae60; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; color: white;">
+                        Submit Review
+                    </button>
+                </form>
+            <?php else: ?>
+                <p style="color: #666; font-style: italic; margin: 0;">You must have this perfume in your collection or stock to leave a review.</p>
+            <?php endif; ?>
         </div>
     <?php else: ?>
         <p><a href="login.php" style="color: #3498db; text-decoration: none; font-weight: bold;">Login</a> to leave a review</p>

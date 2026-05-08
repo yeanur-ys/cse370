@@ -8,6 +8,11 @@ require_once __DIR__ . '/../app/db.php';
 
 $userId = current_user_id();
 $user = $userId !== null ? get_user_with_profile($userId) : null;
+
+if (is_logged_in() && $user === null) {
+    header("Location: logout.php");
+    exit;
+}
 $pdo = db();
 
 // Fetch all reviews with ratings
@@ -30,7 +35,7 @@ $reviews = $stmt->fetchAll();
 $success = '';
 $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in() && $user !== null) {
     $perfumeId = (int) ($_POST['perfume_id'] ?? 0);
     $rating = (int) ($_POST['rating'] ?? 0);
     $comment = trim((string) ($_POST['comment'] ?? ''));
@@ -38,18 +43,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_logged_in()) {
     if ($perfumeId <= 0 || $rating < 1 || $rating > 5) {
         $error = 'Invalid perfume or rating.';
     } else {
-        // Check if user already reviewed this perfume
-        $checkStmt = $pdo->prepare("SELECT Review_ID FROM Review WHERE Perfume_ID = ? AND User_ID = ?");
-        $checkStmt->execute([$perfumeId, $user['id']]);
-        if ($checkStmt->fetch()) {
-            $error = 'You have already reviewed this perfume.';
+        // Check if user has it in collection or purchases
+        $hasInCollection = is_in_collection($user['id'], $perfumeId);
+        $hasInStock = false;
+        
+        $stockCheck = $pdo->prepare("SELECT 1 FROM Purchases WHERE User_ID = ? AND Perfume_ID = ?");
+        $stockCheck->execute([$user['id'], $perfumeId]);
+        if ($stockCheck->fetch()) {
+            $hasInStock = true;
+        }
+
+        if (!$hasInCollection && !$hasInStock) {
+            $error = 'You can only review perfumes that you have in your collection or stock.';
         } else {
-            $insertStmt = $pdo->prepare("INSERT INTO Review (Perfume_ID, User_ID, Rating, Comment) VALUES (?, ?, ?, ?)");
-            if ($insertStmt->execute([$perfumeId, $user['id'], $rating, $comment])) {
-                $success = 'Review submitted successfully!';
-                header("Refresh:2; url=reviews.php");
+            // Check if user already reviewed this perfume
+            $checkStmt = $pdo->prepare("SELECT Review_ID FROM Review WHERE Perfume_ID = ? AND User_ID = ?");
+            $checkStmt->execute([$perfumeId, $user['id']]);
+            if ($checkStmt->fetch()) {
+                $error = 'You have already reviewed this perfume.';
             } else {
-                $error = 'Failed to submit review.';
+                $insertStmt = $pdo->prepare("INSERT INTO Review (Perfume_ID, User_ID, Rating, Comment) VALUES (?, ?, ?, ?)");
+                if ($insertStmt->execute([$perfumeId, $user['id'], $rating, $comment])) {
+                    $success = 'Review submitted successfully!';
+                    header("Refresh:2; url=reviews.php");
+                } else {
+                    $error = 'Failed to submit review.';
+                }
             }
         }
     }
